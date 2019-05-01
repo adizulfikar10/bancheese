@@ -19,7 +19,7 @@ return [
             'host' => 'localhost',
             'user' => 'root',
             'pass' => '',
-            'dbname' => 'db_market',
+            'dbname' => 'db_marketv1',
             'driver' => 'mysql'
         ]
     ],
