@@ -1,0 +1,405 @@
+[1mdiff --git a/src/routes.php b/src/routes.php[m
+[1mindex 720b302..6a80c82 100644[m
+[1m--- a/src/routes.php[m
+[1m+++ b/src/routes.php[m
+[36m@@ -159,124 +159,6 @@[m [mreturn function (App $app) {[m
+             return $newResponse;[m
+         });[m
+ [m
+[31m-        //END USER[m
+[31m-[m
+[31m-        //BAGIAN CABANG[m
+[31m-[m
+[31m-        $app->get("/cabang", function (Request $request, Response $response){[m
+[31m-            $sql = "SELECT * FROM tbl_cabang";[m
+[31m-            $stmt = $this->db->prepare($sql);[m
+[31m-            $stmt->execute();[m
+[31m-            $data = $stmt->fetchAll();[m
+[31m-[m
+[31m-            if ($stmt->rowCount() > 0) {[m
+[31m-                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);[m
+[31m-            }else{[m
+[31m-                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);[m
+[31m-            }[m
+[31m-            [m
+[31m-            $newResponse = $response->withJson($result);[m
+[31m-            return $newResponse;[m
+[31m-            // return $response->withJson(["status" => "success", "data" => $result], 200);[m
+[31m-        });[m
+[31m-[m
+[31m-        $app->get("/cabang/{id}", function (Request $request, Response $response, $args){[m
+[31m-            $id = $args["id"];[m
+[31m-            $sql = "SELECT * FROM tbl_cabang WHERE id_cabang=:id";[m
+[31m-            $stmt = $this->db->prepare($sql);[m
+[31m-            $stmt->execute([":id" => $id]);[m
+[31m-            $data = $stmt->fetch();[m
+[31m-            if ($stmt->rowCount() > 0) {[m
+[31m-                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);[m
+[31m-            }else{[m
+[31m-                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);[m
+[31m-            }[m
+[31m-            $newResponse = $response->withJson($result);[m
+[31m-            return $newResponse;[m
+[31m-            // return $response->withJson(["status" => "success", "data" => $result], 200);[m
+[31m-        });[m
+[31m-[m
+[31m-        $app->post("/cabang", function (Request $request, Response $response){[m
+[31m-[m
+[31m-            $new_users = $request->getParsedBody();[m
+[31m-            [m
+[31m-            $sql = "INSERT INTO tbl_cabang (nama_cabang, alamat, no_hp, nama_pemilik, jam_buka, jam_tutup, printer) VALUES (:nama_cabang, :alamat, :no_hp, :nama_pemilik, :jam_buka, :jam_tutup, :printer)";[m
+[31m-            $stmt = $this->db->prepare($sql);[m
+[31m-            [m
+[31m-            $data = [[m
+[31m-                ":nama_cabang" => $new_users["nama_cabang"],[m
+[31m-                ":alamat" => $new_users["alamat"],[m
+[31m-                ":no_hp" => $new_users["no_hp"],[m
+[31m-                ":nama_pemilik" => $new_users["nama_pemilik"],[m
+[31m-                ":jam_buka" => $new_users["jam_buka"],[m
+[31m-                ":jam_tutup" => $new_users["jam_tutup"],[m
+[31m-                ":printer" => $new_users["printer"][m
+[31m-            ];[m
+[31m-            [m
+[31m-            if($stmt->execute($data)){[m
+[31m-                if ($stmt->rowCount() > 0) {[m
+[31m-                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);[m
+[31m-                }else{[m
+[31m-                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);[m
+[31m-                }[m
+[31m-            }[m
+[31m-[m
+[31m-            $newResponse = $response->withJson($result);[m
+[31m-            return $newResponse;[m
+[31m-        });[m
+[31m-[m
+[31m-        $app->post("/cabang/{id}", function (Request $request, Response $response, $args){[m
+[31m-            $id = $args["id"];[m
+[31m-            $new_users = $request->getParsedBody();[m
+[31m-            $sql = "UPDATE tbl_cabang SET nama_cabang=:nama_cabang, alamat=:alamat, no_hp=:no_hp, nama_pemilik=:nama_pemilik, jam_buka=:jam_buka, jam_tutup=:jam_tutup, printer=:printer WHERE id_cabang=:id";[m
+[31m-            $stmt = $this->db->prepare($sql);[m
+[31m-            [m
+[31m-            $data = [[m
+[31m-                ":id" => $id,[m
+[31m-                 ":nama_cabang" => $new_users["nama_cabang"],[m
+[31m-                ":alamat" => $new_users["alamat"],[m
+[31m-                ":no_hp" => $new_users["no_hp"],[m
+[31m-                ":nama_pemilik" => $new_users["nama_pemilik"],[m
+[31m-                ":jam_buka" => $new_users["jam_buka"],[m
+[31m-                ":jam_tutup" => $new_users["jam_tutup"],[m
+[31m-                ":printer" => $new_users["printer"],[m
+[31m-                ":dtm_upd" => date("Y-m-d H:i:s")[m
+[31m-            ];[m
+[31m-[m
+[31m-            if($stmt->execute($data)){[m
+[31m-                if ($stmt->rowCount() > 0) {[m
+[31m-                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);[m
+[31m-                }else{[m
+[31m-                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);[m
+[31m-                }[m
+[31m-            }[m
+[31m-[m
+[31m-            $newResponse = $response->withJson($result);[m
+[31m-            return $newResponse;[m
+[31m-        });[m
+[31m-[m
+[31m-        $app->delete("/cabang/{id}", function (Request $request, Response $response, $args){[m
+[31m-            $id = $args["id"];[m
+[31m-            $sql = "DELETE FROM tbl_cabang WHERE id_cabang=:id";[m
+[31m-            $stmt = $this->db->prepare($sql);[m
+[31m-[m
+[31m-            $data = [[m
+[31m-                ":id" => $id[m
+[31m-            ];[m
+[31m-[m
+[31m-            if($stmt->execute($data)){[m
+[31m-                if ($stmt->rowCount() > 0) {[m
+[31m-                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);[m
+[31m-                }else{[m
+[31m-                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);[m
+[31m-                }[m
+[31m-            }[m
+[31m-            $newResponse = $response->withJson($result);[m
+[31m-            return $newResponse;[m
+[31m-        });[m
+[31m-[m
+[31m-        //END CABANG[m
+[31m-[m
+         // BAGIAN MASTER MENU[m
+         $app->get("/mastermenu", function (Request $request, Response $response){[m
+             $sql = "SELECT * FROM tbl_master_menu";[m
+[36m@@ -379,7 +261,6 @@[m [mreturn function (App $app) {[m
+             $newResponse = $response->withJson($result);[m
+             return $newResponse;[m
+         });[m
+[31m-        //END MENU[m
+ [m
+         // BAGIAN MENU DETAIL[m
+         $app->get("/menudetail", function (Request $request, Response $response){[m
+[36m@@ -415,17 +296,17 @@[m [mreturn function (App $app) {[m
+ [m
+         $app->post("/menudetail", function (Request $request, Response $response){[m
+ [m
+[31m-            $new_menudetail = $request->getParsedBody();[m
+[32m+[m[32m            $new_mastermenu = $request->getParsedBody();[m
+             [m
+             $sql = "INSERT INTO tbl_menu_detail (id_menu, id_cabang, harga, nama_menu, status) VALUES (:id_menu, :id_cabang, :harga, :nama_menu, :status)";[m
+             $stmt = $this->db->prepare($sql);[m
+             [m
+             $data = [[m
+[31m-                ":id_menu" => $new_menudetail["id_menu"],[m
+[31m-                ":id_cabang" => $new_menudetail["id_cabang"],[m
+[31m-                ":harga" => $new_menudetail["harga"],[m
+[31m-                ":nama_menu" => $new_menudetail["nama_menu"],[m
+[31m-                ":status" => $new_menudetail["status"][m
+[32m+[m[32m                ":id_menu" => $new_mastermenu["id_menu"],[m
+[32m+[m[32m                ":id_cabang" => $new_mastermenu["id_cabang"],[m
+[32m+[m[32m                ":harga" => $new_mastermenu["harga"],[m
+[32m+[m[32m                ":nama_menu" => $new_mastermenu["nama_menu"],[m
+[32m+[m[32m                ":status" => $new_mastermenu["status"][m
+             ];[m
+             [m
+             if($stmt->execute($data)){[m
+[36m@@ -442,17 +323,17 @@[m [mreturn function (App $app) {[m
+ [m
+         $app->post("/menudetail/{id}", function (Request $request, Response $response, $args){[m
+             $id = $args["id"];[m
+[31m-            $new_menudetail = $request->getParsedBody();[m
+[32m+[m[32m            $new_mastermenu = $request->getParsedBody();[m
+             $sql = "UPDATE tbl_menu_detail SET id_menu=:id_menu, id_cabang=:id_cabang, harga=:harga, nama_menu=:nama_menu, status=:status, dtm_upd=:dtm_upd WHERE id_menu_detail=:id";[m
+             $stmt = $this->db->prepare($sql);[m
+             [m
+             $data = [[m
+                 ":id" => $id,[m
+[31m-                ":id_menu" => $new_menudetail["id_menu"],[m
+[31m-                ":id_cabang" => $new_menudetail["id_cabang"],[m
+[31m-                ":harga" => $new_menudetail["harga"],[m
+[31m-                ":nama_menu" => $new_menudetail["nama_menu"],[m
+[31m-                ":status" => $new_menudetail["status"],[m
+[32m+[m[32m                ":id_menu" => $new_mastermenu["id_menu"],[m
+[32m+[m[32m                ":id_cabang" => $new_mastermenu["id_cabang"],[m
+[32m+[m[32m                ":harga" => $new_mastermenu["harga"],[m
+[32m+[m[32m                ":nama_menu" => $new_mastermenu["nama_menu"],[m
+[32m+[m[32m                ":status" => $new_mastermenu["status"],[m
+                 ":dtm_upd" => date("Y-m-d H:i:s")[m
+             ];[m
+             [m
+[36m@@ -487,214 +368,6 @@[m [mreturn function (App $app) {[m
+             $newResponse = $response->withJson($result);[m
+             return $newResponse;[m
+         });[m
+[31m-[m
+[31m-        // END MENU DETAIL[m
+[31m-[m
+[31m-        // BAGIAN KATEGRI[m
+[31m-        $app->get("/kategori", function (Request $request, Response $response){[m
+[31m-            $sql = "SELECT * FROM tbl_kategori";[m
+[31m-            $stmt = $this->db->prepare($sql);[m
+[31m-            $stmt->execute();[m
+[31m-            $data = $stmt->fetchAll();[m
+[31m-            if ($stmt->rowCount() > 0) {[m
+[31m-                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);[m
+[31m-            }else{[m
+[31m-                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);[m
+[31m-            }[m
+[31m-            [m
+[31m-            $newResponse = $response->withJson($result);[m
+[31m-            return $newResponse;[m
+[31m-        });[m
+[31m-[m
+[31m-        $app->get("/kategori/{id}", function (Request $request, Response $response, $args){[m
+[31m-            $id = $args["id"];[m
+[31m-            $sql = "SELECT * FROM tbl_kategori WHERE id_kategori=:id";[m
+[31m-            $stmt = $this->db->prepare($sql);[m
+[31m-            $stmt->execute([":id" => $id]);[m
+[31m-            $data = $stmt->fetch();[m
+[31m-            if ($stmt->rowCount() > 0) {[m
+[31m-                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);[m
+[31m-            }else{[m
+[31m-                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);[m
+[31m-            }[m
+[31m-            [m
+[31m-            $newResponse = $response->withJson($result);[m
+[31m-            return $newResponse;[m
+[31m-        });[m
+[31m-[m
+[31m-        $app->post("/kategori", function (Request $request, Response $response){[m
+[31m-[m
+[31m-            $new_menudetail = $request->getParsedBody();[m
+[31m-            [m
+[31m-            $sql = "INSERT INTO tbl_kategori (nama_kategori) VALUES (:nama_kategori)";[m
+[31m-            $stmt = $this->db->prepare($sql);[m
+[31m-            [m
+[31m-            $data = [[m
+[31m-                ":nama_kategori" => $new_menudetail["nama_kategori"],[m
+[31m-            ];[m
+[31m-            [m
+[31m-            if($stmt->execute($data)){[m
+[31m-                if ($stmt->rowCount() > 0) {[m
+[31m-                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);[m
+[31m-                }else{[m
+[31m-                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);[m
+[31m-                }[m
+[31m-            }[m
+[31m-[m
+[31m-            $newResponse = $response->withJson($result);[m
+[31m-            return $newResponse;[m
+[31m-        });[m
+[31m-[m
+[31m-        $app->post("/kategori/{id}", function (Request $request, Response $response, $args){[m
+[31m-            $id = $args["id"];[m
+[31m-            $new_menudetail = $request->getParsedBody();[m
+[31m-            $sql = "UPDATE tbl_kategori SET nama_kategori=:nama_kategori, dtm_upd=:dtm_upd WHERE id_kategori=:id";[m
+[31m-            $stmt = $this->db->prepare($sql);[m
+[31m-            [m
+[31m-            $data = [[m
+[31m-                ":id" => $id,[m
+[31m-                ":nama_kategori" => $new_menudetail["nama_kategori"],[m
+[31m-                ":dtm_upd" => date("Y-m-d H:i:s")[m
+[31m-            ];[m
+[31m-            [m
+[31m-            if($stmt->execute($data)){[m
+[31m-                if ($stmt->rowCount() > 0) {[m
+[31m-                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);[m
+[31m-                }else{[m
+[31m-                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);[m
+[31m-                }[m
+[31m-            }[m
+[31m-[m
+[31m-            $newResponse = $response->withJson($result);[m
+[31m-            return $newResponse;[m
+[31m-        });[m
+[31m-[m
+[31m-        $app->delete("/kategori/{id}", function (Request $request, Response $response, $args){[m
+[31m-            $id = $args["id"];[m
+[31m-            $sql = "DELETE FROM tbl_kategori WHERE id_kategori=:id";[m
+[31m-            $stmt = $this->db->prepare($sql);[m
+[31m-[m
+[31m-            $data = [[m
+[31m-                ":id" => $id[m
+[31m-            ];[m
+[31m-[m
+[31m-            if($stmt->execute($data)){[m
+[31m-                if ($stmt->rowCount() > 0) {[m
+[31m-                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);[m
+[31m-                }else{[m
+[31m-                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);[m
+[31m-                }[m
+[31m-            }[m
+[31m-            $newResponse = $response->withJson($result);[m
+[31m-            return $newResponse;[m
+[31m-        });[m
+[31m-        // END KATEGORI[m
+[31m-[m
+[31m-        //BAGIAN BAHAN_BAKU[m
+[31m-        $app->get("/bahanbaku", function (Request $request, Response $response){[m
+[31m-            $sql = "SELECT * FROM tbl_bahan_baku";[m
+[31m-            $stmt = $this->db->prepare($sql);[m
+[31m-            $stmt->execute();[m
+[31m-            $data = $stmt->fetchAll();[m
+[31m-            if ($stmt->rowCount() > 0) {[m
+[31m-                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);[m
+[31m-            }else{[m
+[31m-                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);[m
+[31m-            }[m
+[31m-            [m
+[31m-            $newResponse = $response->withJson($result);[m
+[31m-            return $newResponse;[m
+[31m-        });[m
+[31m-[m
+[31m-        $app->get("/bahanbaku/{id}", function (Request $request, Response $response, $args){[m
+[31m-            $id = $args["id"];[m
+[31m-            $sql = "SELECT * FROM tbl_bahan_baku WHERE id_bahan=:id";[m
+[31m-            $stmt = $this->db->prepare($sql);[m
+[31m-            $stmt->execute([":id" => $id]);[m
+[31m-            $data = $stmt->fetch();[m
+[31m-            if ($stmt->rowCount() > 0) {[m
+[31m-                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);[m
+[31m-            }else{[m
+[31m-                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);[m
+[31m-            }[m
+[31m-            [m
+[31m-            $newResponse = $response->withJson($result);[m
+[31m-            return $newResponse;[m
+[31m-        });[m
+[31m-[m
+[31m-        $app->post("/bahanbaku", function (Request $request, Response $response){[m
+[31m-[m
+[31m-            $new_menudetail = $request->getParsedBody();[m
+[31m-            [m
+[31m-            $sql = "INSERT INTO tbl_bahan_baku (id_kategori,nama_bahan,satuan) VALUES (:id_kategori,:nama_bahan,:satuan)";[m
+[31m-            $stmt = $this->db->prepare($sql);[m
+[31m-            [m
+[31m-            $data = [[m
+[31m-                ":id_kategori" => $new_menudetail["id_kategori"],[m
+[31m-                ":nama_bahan" => $new_menudetail["nama_bahan"],[m
+[31m-                ":satuan" => $new_menudetail["satuan"],[m
+[31m-            ];[m
+[31m-            [m
+[31m-            if($stmt->execute($data)){[m
+[31m-                if ($stmt->rowCount() > 0) {[m
+[31m-                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);[m
+[31m-                }else{[m
+[31m-                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);[m
+[31m-                }[m
+[31m-            }[m
+[31m-[m
+[31m-            $newResponse = $response->withJson($result);[m
+[31m-            return $newResponse;[m
+[31m-        });[m
+[31m-[m
+[31m-        $app->post("/bahanbaku/{id}", function (Request $request, Response $response, $args){[m
+[31m-            $id = $args["id"];[m
+[31m-            $new_menudetail = $request->getParsedBody();[m
+[31m-            $sql = "UPDATE tbl_bahan_baku SET id_kategori=:id_kategori,nama_bahan=:nama_bahan,satuan=:satuan, dtm_upd=:dtm_upd WHERE id_bahan=:id";[m
+[31m-            $stmt = $this->db->prepare($sql);[m
+[31m-            [m
+[31m-            $data = [[m
+[31m-                ":id" => $id,[m
+[31m-                ":id_kategori" => $new_menudetail["id_kategori"],[m
+[31m-                ":nama_bahan" => $new_menudetail["nama_bahan"],[m
+[31m-                ":satuan" => $new_menudetail["satuan"],[m
+[31m-                ":dtm_upd" => date("Y-m-d H:i:s")[m
+[31m-            ];[m
+[31m-            [m
+[31m-            if($stmt->execute($data)){[m
+[31m-                if ($stmt->rowCount() > 0) {[m
+[31m-                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);[m
+[31m-                }else{[m
+[31m-                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);[m
+[31m-                }[m
+[31m-            }[m
+[31m-[m
+[31m-            $newResponse = $response->withJson($result);[m
+[31m-            return $newResponse;[m
+[31m-        });[m
+[31m-[m
+[31m-        $app->delete("/bahanbaku/{id}", function (Request $request, Response $response, $args){[m
+[31m-            $id = $args["id"];[m
+[31m-            $sql = "DELETE FROM tbl_bahan_baku WHERE id_bahan=:id";[m
+[31m-            $stmt = $this->db->prepare($sql);[m
+[31m-[m
+[31m-            $data = [[m
+[31m-                ":id" => $id[m
+[31m-            ];[m
+[31m-[m
+[31m-            if($stmt->execute($data)){[m
+[31m-                if ($stmt->rowCount() > 0) {[m
+[31m-                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);[m
+[31m-                }else{[m
+[31m-                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);[m
+[31m-                }[m
+[31m-            }[m
+[31m-            $newResponse = $response->withJson($result);[m
+[31m-            return $newResponse;[m
+[31m-        });[m
+[31m-        //END BAHAN BAKU[m
+[31m-[m
+[31m-[m
+     });[m
+ [m
+ [m
+[1mdiff --git a/src/settings.php b/src/settings.php[m
+[1mindex 8a650fd..1bff7b8 100644[m
+[1m--- a/src/settings.php[m
+[1m+++ b/src/settings.php[m
+[36m@@ -19,7 +19,7 @@[m [mreturn [[m
