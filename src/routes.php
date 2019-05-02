@@ -1131,49 +1131,39 @@ return function (App $app) {
         //END TRANSAKSI DETAIL
 
         //VIEW 
-        //-- V TRANSAKSI
-        //---ALL TRANSAKSI 
-        $app->get("/vtransaksi", function (Request $request, Response $response){
-            $sql = "SELECT * FROM v_transaksi";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute();
-            $data = $stmt->fetchAll();
-            if ($stmt->rowCount() > 0) {
-                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
-            }else{
-                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
-            }
+        // //-- V TRANSAKSI
+        // //---ALL TRANSAKSI 
+        // $app->get("/vtransaksi", function (Request $request, Response $response){
+        //     $sql = "SELECT * FROM v_transaksi";
+        //     $stmt = $this->db->prepare($sql);
+        //     $stmt->execute();
+        //     $data = $stmt->fetchAll();
+        //     if ($stmt->rowCount() > 0) {
+        //         $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+        //     }else{
+        //         $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+        //     }
             
-            $newResponse = $response->withJson($result);
-            return $newResponse;
-        });
-        //---TRANSAKSI BY ID_TRANSAKSI
-        $app->get("/vtransaksi/{id}", function (Request $request, Response $response, $args){
-            $id = $args["id"];
-            $sql = "SELECT * FROM v_transaksi WHERE id_transaksi=:id";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([":id" => $id]);
-            $data = $stmt->fetchAll();
-            if ($stmt->rowCount() > 0) {
-                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
-            }else{
-                $result = array('STATUS'     => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
-            }
-            
-            $newResponse = $response->withJson($result);
-            return $newResponse;
-        });
+        //     $newResponse = $response->withJson($result);
+        //     return $newResponse;
+        // });
+   
         //---TRANSAKSI BY QUERY_STRING
-        $app->get("/vtransaksi/", function (Request $request, Response $response, $args){
+        $app->get("/vtransaksi", function (Request $request, Response $response, $args){
+            $cabang = $request->getQueryParam("cabang");
+            $kasir = $request->getQueryParam("kasir");
             $metode = $request->getQueryParam("metode");
             $periode = $request->getQueryParam("periode");
             $status = $request->getQueryParam("status");
 
-            $sql = "SELECT * FROM v_transaksi WHERE metode_pembayaran LIKE '$metode%' AND tgl_transaksi
-            LIKE '$periode%' AND status LIKE '%$status%'";
+            $where_cabang = ($cabang != "")?"=$cabang":"LIKE '%'";
+
+            $sql = "SELECT * FROM v_transaksi WHERE id_cabang $where_cabang AND metode_pembayaran LIKE '$metode%' 
+            AND nama_kasir LIKE '%$kasir%'
+            AND tgl_transaksi LIKE '$periode%' AND status LIKE '%$status%'";
 
             $stmt = $this->db->prepare($sql);
-            $stmt->execute();
+            $stmt->execute([":id_cabang" => $id_cabang]);
             $data = $stmt->fetchAll();
             if ($stmt->rowCount() > 0) {
                 $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
