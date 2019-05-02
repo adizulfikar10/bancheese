@@ -1132,6 +1132,7 @@ return function (App $app) {
 
         //VIEW 
         //-- V TRANSAKSI
+        //---ALL TRANSAKSI 
         $app->get("/vtransaksi", function (Request $request, Response $response){
             $sql = "SELECT * FROM v_transaksi";
             $stmt = $this->db->prepare($sql);
@@ -1146,7 +1147,7 @@ return function (App $app) {
             $newResponse = $response->withJson($result);
             return $newResponse;
         });
-
+        //---TRANSAKSI BY ID_TRANSAKSI
         $app->get("/vtransaksi/{id}", function (Request $request, Response $response, $args){
             $id = $args["id"];
             $sql = "SELECT * FROM v_transaksi WHERE id_transaksi=:id";
@@ -1156,7 +1157,28 @@ return function (App $app) {
             if ($stmt->rowCount() > 0) {
                 $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
             }else{
-                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                $result = array('STATUS'     => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+            }
+            
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+        //---TRANSAKSI BY QUERY_STRING
+        $app->get("/vtransaksi/", function (Request $request, Response $response, $args){
+            $metode = $request->getQueryParam("metode");
+            $periode = $request->getQueryParam("periode");
+            $status = $request->getQueryParam("status");
+
+            $sql = "SELECT * FROM v_transaksi WHERE metode_pembayaran LIKE '$metode%' AND tgl_transaksi
+            LIKE '$periode%' AND status LIKE '%$status%'";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $data = $stmt->fetchAll();
+            if ($stmt->rowCount() > 0) {
+                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+            }else{
+                $result = array('STATUS'     => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
             }
             
             $newResponse = $response->withJson($result);
@@ -1195,6 +1217,32 @@ return function (App $app) {
             return $newResponse;
         });
         //--END V MENU
+
+        //V SALDO GUDANG BAHAN
+        //-- V SALDO AKHIR 
+        $app->get("/vsaldo/{id_cabang}", function (Request $request, Response $response, $args){
+            $id = $args["id_cabang"];
+            $periode = $request->getQueryParam("periode");
+            if($periode != ''){
+                //SALDO PER PERIODE TAHUN-BULAN
+                $sql = "SELECT * FROM v_saldo_periode WHERE id_cabang=:id_cabang AND periode LIKE '$periode%'";
+            }else {
+                //SALDO AKHIR KESELURUHAN
+                $sql = "SELECT * FROM v_saldo_akhir WHERE id_cabang=:id_cabang";
+            }
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([":id_cabang" => $id]);
+            $data = $stmt->fetchAll();
+            if ($stmt->rowCount() > 0) {
+                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+            }
+            
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+        //END V SALDO
         //END VIEW
     });
 
