@@ -228,12 +228,15 @@ return function (App $app) {
         $app->post("/cabang/{id}", function (Request $request, Response $response, $args){
             $id = $args["id"];
             $new_cabang = $request->getParsedBody();
-            $sql = "UPDATE tbl_cabang SET nama_cabang=:nama_cabang, alamat=:alamat, no_hp=:no_hp, nama_pemilik=:nama_pemilik, jam_buka=:jam_buka, jam_tutup=:jam_tutup, printer=:printer WHERE id_cabang=:id";
+            $sql = "UPDATE tbl_cabang SET nama_cabang=:nama_cabang, alamat=:alamat, no_hp=:no_hp, 
+            nama_pemilik=:nama_pemilik, jam_buka=:jam_buka, jam_tutup=:jam_tutup, printer=:printer,
+            dtm_upd=:dtm_upd
+             WHERE id_cabang=:id";
             $stmt = $this->db->prepare($sql);
             
             $data = [
                 ":id" => $id,
-                 ":nama_cabang" => $new_cabang["nama_cabang"],
+                ":nama_cabang" => $new_cabang["nama_cabang"],
                 ":alamat" => $new_cabang["alamat"],
                 ":no_hp" => $new_cabang["no_hp"],
                 ":nama_pemilik" => $new_cabang["nama_pemilik"],
