@@ -112,22 +112,34 @@ return function (App $app) {
         $app->post("/users/{id}", function (Request $request, Response $response, $args){
             $id = $args["id"];
             $new_users = $request->getParsedBody();
-            $sql = "UPDATE tbl_user SET id_cabang=:id_cabang, username=:username, password=:password, nama_user=:nama_user, no_hp=:no_hp, alamat=:alamat, role=:role,dtm_upd=:dtm_upd WHERE id_user=:id";
-            $stmt = $this->db->prepare($sql);
-            
-            $data = [
-                ":id" => $id,
-                ":id_cabang" => $new_users["id_cabang"],
-                ":username" => $new_users["username"],
-                ":password" => $new_users["password"],
-                ":nama_user" => $new_users["nama_user"],
-                ":no_hp" => $new_users["no_hp"],
-                ":alamat" => $new_users["alamat"],
-                ":role" => $new_users["role"],
-                ":dtm_upd" => date("Y-m-d H:i:s")
-            ];
+            if($new_users["password"]!=''){
+                $data = [
+                    ":id" => $id,
+                    ":id_cabang" => $new_users["id_cabang"],
+                    ":username" => $new_users["username"],
+                    ":password" => sha1($new_users["password"]),
+                    ":nama_user" => $new_users["nama_user"],
+                    ":no_hp" => $new_users["no_hp"],
+                    ":alamat" => $new_users["alamat"],
+                    ":role" => $new_users["role"],
+                    ":dtm_upd" => date("Y-m-d H:i:s")
+                ];
+                $sql = "UPDATE tbl_user SET id_cabang=:id_cabang, username=:username, password=:password, nama_user=:nama_user, no_hp=:no_hp, alamat=:alamat, role=:role,dtm_upd=:dtm_upd WHERE id_user=:id";
+            }else{
+                $data = [
+                    ":id" => $id,
+                    ":id_cabang" => $new_users["id_cabang"],
+                    ":username" => $new_users["username"],
+                    ":nama_user" => $new_users["nama_user"],
+                    ":no_hp" => $new_users["no_hp"],
+                    ":alamat" => $new_users["alamat"],
+                    ":role" => $new_users["role"],
+                    ":dtm_upd" => date("Y-m-d H:i:s")
+                ];
+                $sql = "UPDATE tbl_user SET id_cabang=:id_cabang, username=:username, nama_user=:nama_user, no_hp=:no_hp, alamat=:alamat, role=:role,dtm_upd=:dtm_upd WHERE id_user=:id";
+            }
 
-            
+            $stmt = $this->db->prepare($sql);
             if($stmt->execute($data)){
                 if ($stmt->rowCount() > 0) {
                     $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
@@ -473,8 +485,10 @@ return function (App $app) {
 
         $app->delete("/menudetail/{id}", function (Request $request, Response $response, $args){
             $id = $args["id"];
+            echo $id;
             $sql = "DELETE FROM tbl_menu_detail WHERE id_menu_detail=:id";
             $stmt = $this->db->prepare($sql);
+            echo $sql;
 
             $data = [
                 ":id" => $id
@@ -1156,17 +1170,48 @@ return function (App $app) {
             $cabang = $request->getQueryParam("cabang");
             $kasir = $request->getQueryParam("kasir");
             $metode = $request->getQueryParam("metode");
-            $periode = $request->getQueryParam("periode");
+            $tgl_tansaksi = $request->getQueryParam("tgl_transaksi");
             $status = $request->getQueryParam("status");
+            $periode = $request->getQueryParam("periode");
 
             $where_cabang = ($cabang != "")?"=$cabang":"LIKE '%'";
 
-            $sql = "SELECT * FROM v_transaksi WHERE id_cabang $where_cabang AND metode_pembayaran LIKE '$metode%' 
-            AND nama_kasir LIKE '%$kasir%'
-            AND tgl_transaksi LIKE '$periode%' AND status LIKE '%$status%'";
+            if ($periode == 'Daily'){
+                $sql ="SELECT ID_CABANG,NAMA_CABANG,DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m-%d') AS TGL_TRANSAKSI
+                    ,sum(NET_HARGA) AS NET_HARGA,sum(QTY) AS QTY 
+                    FROM v_transaksi
+                    WHERE id_cabang $where_cabang 
+                    AND tgl_transaksi LIKE '$tgl_tansaksi%' 
+                    GROUP BY NAMA_CABANG,DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m-%d'),ID_CABANG 
+                    ORDER BY TGL_TRANSAKSI";
+            }else{
+                $sql = "SELECT * FROM v_transaksi WHERE id_cabang $where_cabang AND metode_pembayaran LIKE '$metode%' 
+                AND nama_kasir LIKE '%$kasir%'
+                AND tgl_transaksi LIKE '$tgl_tansaksi%' AND status LIKE '%$status%'";
+            }
+                // $sql = "SELECT * FROM v_transaksi";
 
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([":id_cabang" => $id_cabang]);
+            $stmt->execute();
+            $data = $stmt->fetchAll();
+            if ($stmt->rowCount() > 0) {
+                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+            }else{
+                $result = array('STATUS'     => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+            }
+            
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+        
+
+
+        //master tahun
+        $app->get("/vtransaksi/tahun", function (Request $request, Response $response, $args){
+            $sql="SELECT date_format(TGL_TRANSAKSI,'%Y') AS VAL FROM v_transaksi group by date_format(TGL_TRANSAKSI,'%Y')";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
             $data = $stmt->fetchAll();
             if ($stmt->rowCount() > 0) {
                 $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
@@ -1196,7 +1241,7 @@ return function (App $app) {
 
         $app->get("/vmenu/{id}", function (Request $request, Response $response, $args){
             $id = $args["id"];
-            $sql = "SELECT * FROM v_menu WHERE id_menu=:id";
+            $sql = "SELECT * FROM v_menu WHERE id_cabang=:id";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([":id" => $id]);
             $data = $stmt->fetchAll();
@@ -1216,12 +1261,28 @@ return function (App $app) {
         $app->get("/vsaldo/{id_cabang}", function (Request $request, Response $response, $args){
             $id = $args["id_cabang"];
             $periode = $request->getQueryParam("periode");
+            $bahan = urldecode($request->getQueryParam("bahan"));
+
             if($periode != ''){
                 //SALDO PER PERIODE TAHUN-BULAN
-                $sql = "SELECT * FROM v_saldo_periode WHERE id_cabang=:id_cabang AND periode LIKE '$periode%'";
+                if(strlen($periode)==4){
+                    $sql = "SELECT * FROM v_saldo_periode WHERE id_cabang=:id_cabang 
+                    AND periode LIKE '$periode%' 
+                    AND nama_bahan LIKE '$bahan%'";
+                }else{
+                    $sql = "SELECT * FROM v_saldo WHERE id_cabang=:id_cabang 
+                    AND tgl_transaksi LIKE '$periode%' 
+                    AND nama_bahan LIKE '$bahan%'";
+                }
             }else {
                 //SALDO AKHIR KESELURUHAN
-                $sql = "SELECT * FROM v_saldo_akhir WHERE id_cabang=:id_cabang";
+                if(strlen($bahan)!=0){
+                    $sql = "SELECT * FROM v_saldo_periode WHERE id_cabang=:id_cabang 
+                    AND periode LIKE '$periode%' 
+                    AND nama_bahan LIKE '$bahan%'";
+                }else{
+                    $sql = "SELECT * FROM v_saldo_akhir WHERE id_cabang=:id_cabang";
+                }
             }
             $stmt = $this->db->prepare($sql);
             $stmt->execute([":id_cabang" => $id]);
