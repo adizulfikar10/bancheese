@@ -24,7 +24,7 @@ return function (App $app) {
             $username = $user['username'];
             $password = sha1($user['password']);
 
-            $sql = "SELECT username FROM tbl_user WHERE username =:username AND password=:password";
+            $sql = "SELECT username,role,nama_user FROM tbl_user WHERE username =:username AND password=:password";
             $stmt = $this->db->prepare($sql);
 
             $data = [
@@ -32,13 +32,16 @@ return function (App $app) {
                 ":password" => $password
             ];
 
-
             if($stmt->execute($data)){
                 if ($stmt->rowCount() > 0) {
-                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$stmt->fetchAll());
+                    $data = $stmt->fetch();
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
                 }else{
-                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Username atau tidak ditemukan','CODE'=>400,'DATA'=>null);
                 }
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Error executing query','CODE'=>500,'DATA'=>null);
+
             }
             $newResponse = $response->withJson($result);
             return $newResponse;
