@@ -1180,17 +1180,35 @@ return function (App $app) {
             $where_cabang = ($cabang != "")?"=$cabang":"LIKE '%'";
 
             if ($periode == 'Daily'){
-                $sql ="SELECT ID_CABANG,NAMA_CABANG,DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m-%d') AS TGL_TRANSAKSI
+                $sql ="SELECT ID_CABANG,
+                    DATE_FORMAT(TGL_TRANSAKSI,'%e %M %Y') AS PERIODE
+                    ,DATE_FORMAT(TGL_TRANSAKSI,'%e %b %Y') AS TGL_TRANSAKSI
                     ,sum(NET_HARGA) AS NET_HARGA,sum(QTY) AS QTY 
                     FROM v_transaksi
                     WHERE id_cabang $where_cabang 
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
-                    GROUP BY NAMA_CABANG,DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m-%d'),ID_CABANG 
+                    GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m-%d')
+                    ORDER BY TGL_TRANSAKSI";
+            }else if ($periode == 'Monthly'){
+                $sql ="SELECT ID_CABANG
+                    ,DATE_FORMAT(TGL_TRANSAKSI,'%M %Y') AS PERIODE
+                    ,DATE_FORMAT(TGL_TRANSAKSI,'%b %Y') AS TGL_TRANSAKSI
+                    ,sum(NET_HARGA) AS NET_HARGA,sum(QTY) AS QTY 
+                    FROM v_transaksi
+                    WHERE id_cabang $where_cabang 
+                    AND tgl_transaksi LIKE '$tgl_tansaksi%' 
+                    GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m')
                     ORDER BY TGL_TRANSAKSI";
             }else{
-                $sql = "SELECT * FROM v_transaksi WHERE id_cabang $where_cabang AND metode_pembayaran LIKE '$metode%' 
-                AND nama_kasir LIKE '%$kasir%'
-                AND tgl_transaksi LIKE '$tgl_tansaksi%' AND status LIKE '%$status%'";
+                $sql ="SELECT ID_CABANG
+                    ,DATE_FORMAT(TGL_TRANSAKSI,'%Y') AS PERIODE
+                    ,DATE_FORMAT(TGL_TRANSAKSI,'%Y') AS TGL_TRANSAKSI
+                    ,sum(NET_HARGA) AS NET_HARGA,sum(QTY) AS QTY 
+                    FROM v_transaksi
+                    WHERE id_cabang $where_cabang 
+                    AND tgl_transaksi LIKE '$tgl_tansaksi%' 
+                    GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y')
+                    ORDER BY TGL_TRANSAKSI";
             }
                 // $sql = "SELECT * FROM v_transaksi";
 
@@ -1266,13 +1284,30 @@ return function (App $app) {
             $periode = $request->getQueryParam("periode");
             $bahan = urldecode($request->getQueryParam("bahan"));
 
+            
             if($periode != ''){
                 //SALDO PER PERIODE TAHUN-BULAN
                 if(strlen($periode)==4){
                     $sql = "SELECT * FROM v_saldo_periode WHERE id_cabang=:id_cabang 
                     AND periode LIKE '$periode%' 
                     AND nama_bahan LIKE '$bahan%'";
-                }else{
+                }else if(strlen($periode)==7){
+                    $sql = "SELECT 
+                    DATE_FORMAT(TGL_TRANSAKSI,'%e %b %Y') AS TGL_TRANSAKSI,
+                    NAMA_BAHAN,
+                    SUM(DEBET) AS DEBET,
+                    SUM(KREDIT) AS KREDIT,
+                    HARGA 
+                    FROM v_saldo 
+                    WHERE id_cabang=:id_cabang 
+                    AND tgl_transaksi LIKE '$periode%' 
+                    AND nama_bahan LIKE '$bahan%'
+                    GROUP BY
+                    DATE_FORMAT(TGL_TRANSAKSI,'%Y%m%d'),
+                    NAMA_BAHAN,
+                    HARGA";
+                }
+                else{
                     $sql = "SELECT * FROM v_saldo WHERE id_cabang=:id_cabang 
                     AND tgl_transaksi LIKE '$periode%' 
                     AND nama_bahan LIKE '$bahan%'";
