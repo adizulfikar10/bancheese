@@ -1178,7 +1178,7 @@ return function (App $app) {
 
             if ($periode == 'Daily'){
                 $sql ="SELECT ID_CABANG,
-                    DATE_FORMAT(TGL_TRANSAKSI,'%e %M %Y') AS PERIODE
+                    DATE_FORMAT(TGL_TRANSAKSI,'%Y%m%d') AS PERIODE
                     ,DATE_FORMAT(TGL_TRANSAKSI,'%e %b %Y') AS TGL_TRANSAKSI
                     ,sum(NET_HARGA) AS NET_HARGA,sum(QTY) AS QTY 
                     FROM v_transaksi
@@ -1188,7 +1188,7 @@ return function (App $app) {
                     ORDER BY TGL_TRANSAKSI";
             }else if ($periode == 'Monthly'){
                 $sql ="SELECT ID_CABANG
-                    ,DATE_FORMAT(TGL_TRANSAKSI,'%M %Y') AS PERIODE
+                    ,DATE_FORMAT(TGL_TRANSAKSI,'%Y%m') AS PERIODE
                     ,DATE_FORMAT(TGL_TRANSAKSI,'%b %Y') AS TGL_TRANSAKSI
                     ,sum(NET_HARGA) AS NET_HARGA,sum(QTY) AS QTY 
                     FROM v_transaksi
