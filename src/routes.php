@@ -1148,6 +1148,51 @@ return function (App $app) {
             $newResponse = $response->withJson($result);
             return $newResponse;
         });
+
+        $app->post("/addTransaksi", function (Request $request, Response $response, $args){
+            $transaksi = $request->getParsedBody();
+            $sql = "INSERT INTO tbl_transaksi(id_transaksi,id_user,id_cabang,status,bayar) VALUES (:id_transaksi,:id_user,:id_cabang,:status,:bayar);";
+            $stmt = $this->db->prepare($sql);
+            $dataTransaksi = [
+                ":id_transaksi" => $transaksi['ID_TRANSAKSI'],
+                ":id_user" => $transaksi["ID_USER"],
+                ":id_cabang" => $transaksi["ID_CABANG"],
+                ":status" => $transaksi["STATUS"],
+                ":bayar" => $transaksi["BAYAR"]
+            ];
+            $isSuccess = true;
+            if($stmt->execute($dataTransaksi)){
+                foreach($transaksi['listTransaksi'] as $detailTransaksi){
+
+                    $sql = "INSERT INTO tbl_transaksi_detail(id_transaksi,id_menu_detail,harga,qty,nama_menu,diskon) 
+                    VALUES (:id_transaksi,:id_menu_detail,:harga,:qty,:nama_menu,:diskon);";
+                    $stmt = $this->db->prepare($sql);
+                    
+                    $data = [
+                        ":id_transaksi" =>$detailTransaksi['transaksi']['ID_TRANSAKSI'],
+                        ":id_menu_detail" => $detailTransaksi['ID_MENU_DETAIL'],
+                        ":harga" =>$detailTransaksi['HARGA'],
+                        ":qty" =>$detailTransaksi['transaksi']['QTY'],
+                        ":nama_menu" => $detailTransaksi['NAMA_MENU'],
+                        ":diskon" => $detailTransaksi['transaksi']['DISKON'],
+                    ];
+                    if($stmt->execute($data)){
+                        
+                    }else{
+                        $isSuccess = false;
+                    }
+                }
+            }
+
+            if($isSuccess){
+                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>NULL);
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Ada data yang tidak dapat diunggah','CODE'=>400,'DATA'=>NULL);
+            }
+                
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
         //END TRANSAKSI DETAIL
 
         //VIEW 
