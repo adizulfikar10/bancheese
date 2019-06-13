@@ -1169,6 +1169,50 @@ return function (App $app) {
         // });
    
         //---TRANSAKSI BY QUERY_STRING
+        $app->get("/vtransaksidetail", function (Request $request, Response $response, $args){
+            
+            $cabang = $request->getQueryParam("cabang");
+            $tanggal = $request->getQueryParam("tgl");
+            $periode = $request->getQueryParam("periode");
+
+            
+            if($periode=='Daily'){
+                $where= "DATE_FORMAT(TGL_TRANSAKSI,'%Y%m%d') = '$tanggal'";
+            }else if($periode=='Monthly'){
+                $where= "DATE_FORMAT(TGL_TRANSAKSI,'%Y%m') = '$tanggal'";    
+            }else{
+                $where= "DATE_FORMAT(TGL_TRANSAKSI,'%Y') = '$tanggal'";    
+            }
+            
+            $where.=($cabang!='')?"AND ID_CABANG=$cabang":"";
+
+            $sql = "SELECT ID_TRANSAKSI,
+            TGL_TRANSAKSI,
+            STATUS,
+            METODE_PEMBAYARAN,
+            NAMA_MENU,
+            QTY,
+            HARGA,
+            DISKON,
+            NET_HARGA 
+            FROM v_transaksi
+            WHERE $where 
+            ";
+
+            // echo $sql;
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $data = $stmt->fetchAll();
+            if ($stmt->rowCount() > 0) {
+                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+            }
+            
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
         $app->get("/vtransaksi", function (Request $request, Response $response, $args){
             $cabang = $request->getQueryParam("cabang");
             $kasir = $request->getQueryParam("kasir");
