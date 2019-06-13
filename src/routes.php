@@ -24,7 +24,7 @@ return function (App $app) {
             $username = $user['username'];
             $password = sha1($user['password']);
 
-            $sql = "SELECT username,role,nama_user FROM tbl_user WHERE username =:username AND password=:password";
+            $sql = "SELECT username,role,nama_user,id_cabang,id_user FROM tbl_user WHERE username =:username AND password=:password";
             $stmt = $this->db->prepare($sql);
 
             $data = [
