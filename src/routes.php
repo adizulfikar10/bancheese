@@ -949,6 +949,54 @@ return function (App $app) {
             return $newResponse;
         });
 
+        $app->post("/transaksiList", function (Request $request, Response $response){
+            $sql = "SELECT a.ID_TRANSAKSI,a.STATUS,a.TGL_TRANSAKSI, sum(b.QTY) as QTY,sum(b.HARGA*b.QTY) as NOMINAL FROM `tbl_transaksi` a join tbl_transaksi_detail b on a.ID_TRANSAKSI = b.ID_TRANSAKSI
+                    where DATE_FORMAT(NOW(), '%Y-%m-%d') = DATE_FORMAT(a.TGL_TRANSAKSI, '%Y-%m-%d')
+                    and a.id_user = :id_user
+                    and a.id_cabang = :id_cabang
+                    group by a.ID_TRANSAKSI
+                    order by TGL_TRANSAKSI DESC";
+
+            $stmt = $this->db->prepare($sql);
+            $body = $request->getParsedBody();
+            $data = [
+                ":id_user" => $body["id_user"],
+                ":id_cabang" => $body["id_cabang"],
+            ];
+            $stmt->execute($data);
+            $data = $stmt->fetchAll();
+
+            if ($stmt->rowCount() > 0) {
+                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Tidak ada data yang ditampilkan','CODE'=>404,'DATA'=>null);
+            }
+            
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
+        $app->get("/transaksiDetail/{id}", function (Request $request, Response $response, $args){
+            $id = $args["id"];
+            
+            $sql = "SELECT a.ID_TRANSAKSI,b.ID_TRANSAKSI_DETAIL,B.ID_MENU_DETAIL, a.BAYAR, a.STATUS, b.HARGA, b.QTY,b.DISKON,b.NAMA_MENU,c.NAMA_USER, a.TGL_TRANSAKSI FROM `tbl_transaksi` a 
+                    join tbl_transaksi_detail b on a.id_transaksi = b.ID_TRANSAKSI 
+                    join tbl_user c on a.id_user = c.ID_USER 
+                    where a.id_transaksi = :id_transaksi";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([":id_transaksi" => $id]);
+            $data = $stmt->fetchAll();
+            if ($stmt->rowCount() > 0) {
+                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Tidak ada data yang ditampilkan','CODE'=>404,'DATA'=>null);
+            }
+            
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
         $app->get("/transaksi/{id}", function (Request $request, Response $response, $args){
             $id = $args["id"];
             $sql = "SELECT * FROM tbl_transaksi WHERE id_transaksi=:id";
@@ -1151,6 +1199,24 @@ return function (App $app) {
 
         $app->post("/addTransaksi", function (Request $request, Response $response, $args){
             $transaksi = $request->getParsedBody();
+
+            $sql = "DELETE FROM tbl_transaksi_detail WHERE id_transaksi=:id";
+            $stmt = $this->db->prepare($sql);
+            $dataDeleteDetail = [
+                ":id" => $transaksi['ID_TRANSAKSI']
+            ];
+            $stmt->execute($dataDeleteDetail);
+
+            $sql = "DELETE FROM tbl_transaksi WHERE id_transaksi=:id";
+            $stmt = $this->db->prepare($sql);
+            $dataDelete = [
+                ":id" => $transaksi['ID_TRANSAKSI']
+            ];
+            $stmt->execute($dataDelete);
+
+          
+
+
             $sql = "INSERT INTO tbl_transaksi(id_transaksi,id_user,id_cabang,status,bayar) VALUES (:id_transaksi,:id_user,:id_cabang,:status,:bayar);";
             $stmt = $this->db->prepare($sql);
             $dataTransaksi = [
