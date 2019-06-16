@@ -1210,7 +1210,7 @@ return function (App $app) {
             $sql = "DELETE FROM tbl_transaksi WHERE id_transaksi=:id";
             $stmt = $this->db->prepare($sql);
             $dataDelete = [
-                ":id" => $transaksi['ID_TRANSAKSI']
+                ":id" => $transaksi['ID_TRANSAKSI'] 
             ];
             $stmt->execute($dataDelete);
 
