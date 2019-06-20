@@ -24,7 +24,7 @@ return function (App $app) {
             $username = $user['username'];
             $password = sha1($user['password']);
 
-            $sql = "SELECT username,role,nama_user,id_cabang,id_user FROM tbl_user WHERE username =:username AND password=:password";
+            $sql = "SELECT username,role,nama_user FROM tbl_user WHERE username =:username AND password=:password";
             $stmt = $this->db->prepare($sql);
 
             $data = [
@@ -93,7 +93,7 @@ return function (App $app) {
             $data = [
                 ":id_cabang" => $new_users["id_cabang"],
                 ":username" => $new_users["username"],
-                ":password" => $new_users["password"],
+                ":password" => sha1($new_users["password"]),
                 ":nama_user" => $new_users["nama_user"],
                 ":no_hp" => $new_users["no_hp"],
                 ":alamat" => $new_users["alamat"],
@@ -1184,19 +1184,25 @@ return function (App $app) {
                 $where= "DATE_FORMAT(TGL_TRANSAKSI,'%Y') = '$tanggal'";    
             }
             
-            $where.=($cabang!='')?"AND ID_CABANG=$cabang":"";
+            $where.=($cabang!='all')?"AND ID_CABANG=$cabang":"";
 
-            $sql = "SELECT ID_TRANSAKSI,
+            $sql = "SELECT 
+            ID_MENU,
             TGL_TRANSAKSI,
             STATUS,
-            METODE_PEMBAYARAN,
+            METODE_PEMBAYARAN,  
             NAMA_MENU,
-            QTY,
-            HARGA,
-            DISKON,
-            NET_HARGA 
+            SUM(QTY) AS QTY,
+            SUM(HARGA) AS HARGA,
+            AVG(DISKON) AS DISKON,
+            SUM(NET_HARGA) AS NET_HARGA 
             FROM v_transaksi
             WHERE $where 
+            GROUP BY
+            ID_MENU,
+            STATUS,
+            METODE_PEMBAYARAN,
+            NAMA_MENU
             ";
 
             // echo $sql;
@@ -1242,7 +1248,7 @@ return function (App $app) {
                     WHERE id_cabang $where_cabang 
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
                     GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m')
-                    ORDER BY TGL_TRANSAKSI";
+                    ORDER BY DATE_FORMAT(TGL_TRANSAKSI,'%Y%m')";
             }else{
                 $sql ="SELECT ID_CABANG
                     ,DATE_FORMAT(TGL_TRANSAKSI,'%Y') AS PERIODE
@@ -1252,7 +1258,7 @@ return function (App $app) {
                     WHERE id_cabang $where_cabang 
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
                     GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y')
-                    ORDER BY TGL_TRANSAKSI";
+                    ORDER BY DATE_FORMAT(TGL_TRANSAKSI,'%Y%m')";
             }
                 // $sql = "SELECT * FROM v_transaksi";
 
@@ -1352,20 +1358,35 @@ return function (App $app) {
                     HARGA";
                 }
                 else{
-                    $sql = "SELECT * FROM v_saldo WHERE id_cabang=:id_cabang 
-                    AND tgl_transaksi LIKE '$periode%' 
-                    AND nama_bahan LIKE '$bahan%'";
+                    $sql = "SELECT 
+                    DATE_FORMAT(TGL_TRANSAKSI,'%e %b %Y') AS TGL_TRANSAKSI,
+                    SUM(DEBET) AS DEBET,
+                    SUM(KREDIT) AS KREDIT
+                    FROM v_saldo WHERE id_cabang=:id_cabang 
+                    AND DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m') = DATE_FORMAT('$periode','%Y-%m') 
+                    AND nama_bahan LIKE '$bahan%'
+                    GROUP BY
+                    DATE_FORMAT(TGL_TRANSAKSI,'%e %b %Y')";
                 }
             }else {
                 //SALDO AKHIR KESELURUHAN
                 if(strlen($bahan)!=0){
-                    $sql = "SELECT * FROM v_saldo_periode WHERE id_cabang=:id_cabang 
+                    $sql = "SELECT
+                    DATE_FORMAT(TGL_TRANSAKSI,'%Y%m%d') AS TGL_TRANSAKSI, 
+                    DATE_FORMAT(TGL_TRANSAKSI,'%b %Y') AS PERIODE, 
+                    SALDO_AWAL,
+                    DEBET,
+                    KREDIT,
+                    SALDO,
+                    HARGA
+                    FROM v_saldo_periode WHERE id_cabang=:id_cabang 
                     AND periode LIKE '$periode%' 
                     AND nama_bahan LIKE '$bahan%'";
                 }else{
                     $sql = "SELECT * FROM v_saldo_akhir WHERE id_cabang=:id_cabang";
                 }
             }
+
             $stmt = $this->db->prepare($sql);
             $stmt->execute([":id_cabang" => $id]);
             $data = $stmt->fetchAll();
