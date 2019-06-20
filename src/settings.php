@@ -17,9 +17,9 @@ return [
         ],
         'db' => [
             'host' => 'localhost',
-            'user' => 'root',
-            'pass' => '',
-            'dbname' => 'db_marketv1',
+            'user' => 'yogaa209_bancheese',
+            'pass' => 'bancheese2019',
+            'dbname' => 'yogaa209_db_marketv1',
             'driver' => 'mysql'
         ]
     ],
