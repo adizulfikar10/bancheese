@@ -1584,6 +1584,33 @@ return function (App $app) {
             $newResponse = $response->withJson($result);
             return $newResponse;
         });
+
+        $app->get("/vsaldoHarian/{id_cabang}/detail/{id_bahan}", function (Request $request, Response $response, $args){
+            $id = $args["id_cabang"];
+            $id_bahan = $args["id_bahan"];
+            $sql = "SELECT * FROM `v_saldo` WHERE date_format(tgl_transaksi,'%Y-%m-%d') = date_format(now(),'%Y-%m-%d') and id_bahan = :id_bahan
+            and ID_CABANG = :id_cabang";
+
+            $stmt = $this->db->prepare($sql);
+
+            $data = [
+                ":id_cabang" => $id,
+                ":id_bahan" => $id_bahan
+            ];
+
+            if($stmt->execute($data)){
+                if ($stmt->rowCount() > 0) {
+                    $data = $stmt->fetchAll();
+
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                }
+            }
+            
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
         //END VIEW
     });
 
