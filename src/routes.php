@@ -1358,6 +1358,7 @@ return function (App $app) {
             SUM(NET_HARGA) AS NET_HARGA 
             FROM v_transaksi
             WHERE $where 
+            AND STATUS = 'SUKSES'
             GROUP BY
             ID_MENU,
             STATUS,
@@ -1397,6 +1398,7 @@ return function (App $app) {
                     FROM v_transaksi
                     WHERE id_cabang $where_cabang 
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
+                    AND STATUS = 'SUKSES'
                     GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m-%d')
                     ORDER BY TGL_TRANSAKSI";
             }else if ($periode == 'Monthly'){
@@ -1407,6 +1409,7 @@ return function (App $app) {
                     FROM v_transaksi
                     WHERE id_cabang $where_cabang 
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
+                    AND STATUS = 'SUKSES'
                     GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m')
                     ORDER BY DATE_FORMAT(TGL_TRANSAKSI,'%Y%m')";
             }else{
@@ -1417,6 +1420,7 @@ return function (App $app) {
                     FROM v_transaksi
                     WHERE id_cabang $where_cabang 
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
+                    AND STATUS = 'SUKSES'
                     GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y')
                     ORDER BY DATE_FORMAT(TGL_TRANSAKSI,'%Y%m')";
             }
