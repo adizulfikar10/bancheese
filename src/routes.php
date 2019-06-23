@@ -1561,7 +1561,10 @@ return function (App $app) {
             return $newResponse;
         });
         //END V SALDO
+<<<<<<< HEAD
 
+=======
+>>>>>>> 91776a2ac97b7ce648e8da9300f2ab1431c29c08
         //V SALDO PERIODE HARIAN 
         $app->get("/vsaldoHarian/{id_cabang}", function (Request $request, Response $response, $args){
             $id = $args["id_cabang"];
