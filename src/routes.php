@@ -718,7 +718,7 @@ return function (App $app) {
 
         $app->post("/bahanbaku/{id}", function (Request $request, Response $response, $args){
             $id = $args["id"];
-            $new_menudetail = $request->getParsedBody();
+            $new_bahan = $request->getParsedBody();
             $sql = "UPDATE tbl_bahan_baku SET id_kategori=:id_kategori,nama_bahan=:nama_bahan,satuan=:satuan, dtm_upd=:dtm_upd WHERE id_bahan=:id";
             $stmt = $this->db->prepare($sql);
             
@@ -1534,6 +1534,7 @@ return function (App $app) {
                     $sql = "SELECT
                     DATE_FORMAT(TGL_TRANSAKSI,'%Y%m%d') AS TGL_TRANSAKSI, 
                     DATE_FORMAT(TGL_TRANSAKSI,'%b %Y') AS PERIODE, 
+                    SATUAN,
                     SALDO_AWAL,
                     DEBET,
                     KREDIT,
