@@ -24,7 +24,7 @@ return function (App $app) {
             $username = $user['username'];
             $password = sha1($user['password']);
 
-            $sql = "SELECT username,role,nama_user FROM tbl_user WHERE username =:username AND password=:password";
+            $sql = "SELECT username,role,nama_user,id_cabang,id_user FROM tbl_user WHERE username =:username AND password=:password";
             $stmt = $this->db->prepare($sql);
 
             $data = [
@@ -1561,6 +1561,58 @@ return function (App $app) {
             return $newResponse;
         });
         //END V SALDO
+
+        //V SALDO PERIODE HARIAN 
+        $app->get("/vsaldoHarian/{id_cabang}", function (Request $request, Response $response, $args){
+            $id = $args["id_cabang"];
+            $sql = "SELECT * FROM `v_saldo_periode_hari` WHERE PERIODE = date_format(now(),'%Y-%m-%d')
+            and ID_CABANG = :id_cabang";
+            $stmt = $this->db->prepare($sql);
+
+            $data = [
+                ":id_cabang" => $id
+            ];
+
+            if($stmt->execute($data)){
+                if ($stmt->rowCount() > 0) {
+                    $data = $stmt->fetchAll();
+
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                }
+            }
+            
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
+        $app->get("/vsaldoHarian/{id_cabang}/detail/{id_bahan}", function (Request $request, Response $response, $args){
+            $id = $args["id_cabang"];
+            $id_bahan = $args["id_bahan"];
+            $sql = "SELECT * FROM `v_saldo` WHERE date_format(tgl_transaksi,'%Y-%m-%d') = date_format(now(),'%Y-%m-%d') and id_bahan = :id_bahan
+            and ID_CABANG = :id_cabang";
+
+            $stmt = $this->db->prepare($sql);
+
+            $data = [
+                ":id_cabang" => $id,
+                ":id_bahan" => $id_bahan
+            ];
+
+            if($stmt->execute($data)){
+                if ($stmt->rowCount() > 0) {
+                    $data = $stmt->fetchAll();
+
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                }
+            }
+            
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
         //END VIEW
     });
 
