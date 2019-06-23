@@ -17,15 +17,9 @@ return [
         ],
         'db' => [
             'host' => 'localhost',
-<<<<<<< HEAD
-            'user' => 'root',
-            'pass' => '',
-            'dbname' => 'db_marketv1',
-=======
             'user' => 'banchees_market',
             'pass' => 'Bancheese2019',
             'dbname' => 'banchees_db_marketv1',
->>>>>>> 91776a2ac97b7ce648e8da9300f2ab1431c29c08
             'driver' => 'mysql'
         ]
     ],
