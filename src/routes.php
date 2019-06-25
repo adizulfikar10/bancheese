@@ -1563,8 +1563,10 @@ return function (App $app) {
         //V SALDO PERIODE HARIAN 
         $app->get("/vsaldoHarian/{id_cabang}", function (Request $request, Response $response, $args){
             $id = $args["id_cabang"];
-            $sql = "SELECT * FROM `v_saldo_periode_hari` WHERE PERIODE = date_format(now(),'%Y-%m-%d')
-            and ID_CABANG = :id_cabang";
+            $sql = "SELECT id_cabang,nama_cabang,id_bahan,nama_bahan,sum(debet) as debet, sum(kredit) as kredit,tgl_transaksi,harga, sum(debet)-sum(kredit) as total_saldo,
+            (select sum(debet)-sum(kredit) from v_saldo where id_bahan = vs.id_bahan and id_cabang = vs.id_cabang and date_format(tgl_transaksi,'%Y-%m-%d') < date_format(now(),'%Y-%m-%d')) as saldo_awal  
+            FROM `v_saldo` vs where id_cabang = :id_cabang
+            group by id_bahan";
             $stmt = $this->db->prepare($sql);
 
             $data = [
@@ -1601,10 +1603,9 @@ return function (App $app) {
             if($stmt->execute($data)){
                 if ($stmt->rowCount() > 0) {
                     $data = $stmt->fetchAll();
-
                     $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
                 }else{
-                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Tidak ada data yang ditampilkan','CODE'=>404,'DATA'=>null);
                 }
             }
             
