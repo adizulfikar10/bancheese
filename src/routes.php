@@ -1512,10 +1512,10 @@ return function (App $app) {
                     WHERE id_cabang=:id_cabang 
                     AND tgl_transaksi LIKE '$periode%' 
                     AND nama_bahan LIKE '$bahan%'
+                    and harga 
                     GROUP BY
                     DATE_FORMAT(TGL_TRANSAKSI,'%Y%m%d'),
-                    NAMA_BAHAN,
-                    HARGA";
+                    NAMA_BAHAN";
                 }
                 else{
                     $sql = "SELECT 
@@ -1544,7 +1544,7 @@ return function (App $app) {
                     AND periode LIKE '$periode%' 
                     AND nama_bahan LIKE '$bahan%'";
                 }else{
-                    $sql = "SELECT * FROM v_saldo_akhir WHERE id_cabang=:id_cabang";
+                    $sql = "SELECT * FROM v_saldo_akhir WHERE id_cabang=:id_cabang group by ID_BAHAN, HARGA";
                 }
             }
 
