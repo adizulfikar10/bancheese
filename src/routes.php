@@ -1513,7 +1513,7 @@ return function (App $app) {
                     WHERE id_cabang=:id_cabang 
                     AND tgl_transaksi LIKE '$periode%' 
                     AND nama_bahan LIKE '$bahan%'
-                    and harga 
+                    AND harga = '$harga'
                     GROUP BY
                     DATE_FORMAT(TGL_TRANSAKSI,'%Y%m%d'),
                     NAMA_BAHAN";
@@ -1526,6 +1526,7 @@ return function (App $app) {
                     FROM v_saldo WHERE id_cabang=:id_cabang 
                     AND DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m') = DATE_FORMAT('$periode','%Y-%m') 
                     AND nama_bahan LIKE '$bahan%'
+                    AND harga = '$harga'
                     GROUP BY
                     DATE_FORMAT(TGL_TRANSAKSI,'%e %b %Y')";
                 }
@@ -1542,10 +1543,20 @@ return function (App $app) {
                     SALDO,
                     HARGA
                     FROM v_saldo_periode WHERE id_cabang=:id_cabang 
+                    AND HARGA = '$harga'
                     AND periode LIKE '$periode%' 
                     AND nama_bahan LIKE '$bahan%'";
                 }else{
-                    $sql = "SELECT * FROM v_saldo_akhir WHERE id_cabang=:id_cabang group by ID_BAHAN, HARGA";
+                    $sql = "SELECT NAMA_BAHAN,
+                    SATUAN, 
+                    SUM(KREDIT)AS KREDIT,
+                    SUM(DEBET)AS DEBET,
+                    SUM(DEBET)-SUM(KREDIT) 
+                    AS SALDO,
+                    HARGA 
+                    FROM v_saldo_akhir 
+                    WHERE id_cabang=:id_cabang  
+                    group by ID_BAHAN, HARGA";
                 }
             }
 
