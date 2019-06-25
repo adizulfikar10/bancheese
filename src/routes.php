@@ -718,7 +718,7 @@ return function (App $app) {
 
         $app->post("/bahanbaku/{id}", function (Request $request, Response $response, $args){
             $id = $args["id"];
-            $new_menudetail = $request->getParsedBody();
+            $new_bahan = $request->getParsedBody();
             $sql = "UPDATE tbl_bahan_baku SET id_kategori=:id_kategori,nama_bahan=:nama_bahan,satuan=:satuan, dtm_upd=:dtm_upd WHERE id_bahan=:id";
             $stmt = $this->db->prepare($sql);
             
@@ -1358,6 +1358,7 @@ return function (App $app) {
             SUM(NET_HARGA) AS NET_HARGA 
             FROM v_transaksi
             WHERE $where 
+            AND STATUS = 'SUKSES'
             GROUP BY
             ID_MENU,
             STATUS,
@@ -1397,6 +1398,7 @@ return function (App $app) {
                     FROM v_transaksi
                     WHERE id_cabang $where_cabang 
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
+                    AND STATUS = 'SUKSES'
                     GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m-%d')
                     ORDER BY TGL_TRANSAKSI";
             }else if ($periode == 'Monthly'){
@@ -1407,6 +1409,7 @@ return function (App $app) {
                     FROM v_transaksi
                     WHERE id_cabang $where_cabang 
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
+                    AND STATUS = 'SUKSES'
                     GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m')
                     ORDER BY DATE_FORMAT(TGL_TRANSAKSI,'%Y%m')";
             }else{
@@ -1417,6 +1420,7 @@ return function (App $app) {
                     FROM v_transaksi
                     WHERE id_cabang $where_cabang 
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
+                    AND STATUS = 'SUKSES'
                     GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y')
                     ORDER BY DATE_FORMAT(TGL_TRANSAKSI,'%Y%m')";
             }
@@ -1534,6 +1538,7 @@ return function (App $app) {
                     $sql = "SELECT
                     DATE_FORMAT(TGL_TRANSAKSI,'%Y%m%d') AS TGL_TRANSAKSI, 
                     DATE_FORMAT(TGL_TRANSAKSI,'%b %Y') AS PERIODE, 
+                    SATUAN,
                     SALDO_AWAL,
                     DEBET,
                     KREDIT,
@@ -1560,6 +1565,7 @@ return function (App $app) {
             return $newResponse;
         });
         //END V SALDO
+
         //V SALDO PERIODE HARIAN 
         $app->get("/vsaldoHarian/{id_cabang}", function (Request $request, Response $response, $args){
             $id = $args["id_cabang"];
