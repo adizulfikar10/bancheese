@@ -1497,6 +1497,7 @@ return function (App $app) {
             $id = $args["id_cabang"];
             $periode = $request->getQueryParam("periode");
             $bahan = urldecode($request->getQueryParam("bahan"));
+            $harga = urldecode($request->getQueryParam("harga"));
 
             
             if($periode != ''){
