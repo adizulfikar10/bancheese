@@ -718,7 +718,7 @@ return function (App $app) {
 
         $app->post("/bahanbaku/{id}", function (Request $request, Response $response, $args){
             $id = $args["id"];
-            $new_bahan = $request->getParsedBody();
+            $new_menudetail = $request->getParsedBody();
             $sql = "UPDATE tbl_bahan_baku SET id_kategori=:id_kategori,nama_bahan=:nama_bahan,satuan=:satuan, dtm_upd=:dtm_upd WHERE id_bahan=:id";
             $stmt = $this->db->prepare($sql);
             
@@ -1358,7 +1358,6 @@ return function (App $app) {
             SUM(NET_HARGA) AS NET_HARGA 
             FROM v_transaksi
             WHERE $where 
-            AND STATUS = 'SUKSES'
             GROUP BY
             ID_MENU,
             STATUS,
@@ -1398,7 +1397,6 @@ return function (App $app) {
                     FROM v_transaksi
                     WHERE id_cabang $where_cabang 
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
-                    AND STATUS = 'SUKSES'
                     GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m-%d')
                     ORDER BY TGL_TRANSAKSI";
             }else if ($periode == 'Monthly'){
@@ -1409,7 +1407,6 @@ return function (App $app) {
                     FROM v_transaksi
                     WHERE id_cabang $where_cabang 
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
-                    AND STATUS = 'SUKSES'
                     GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m')
                     ORDER BY DATE_FORMAT(TGL_TRANSAKSI,'%Y%m')";
             }else{
@@ -1420,7 +1417,6 @@ return function (App $app) {
                     FROM v_transaksi
                     WHERE id_cabang $where_cabang 
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
-                    AND STATUS = 'SUKSES'
                     GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y')
                     ORDER BY DATE_FORMAT(TGL_TRANSAKSI,'%Y%m')";
             }
@@ -1517,10 +1513,10 @@ return function (App $app) {
                     WHERE id_cabang=:id_cabang 
                     AND tgl_transaksi LIKE '$periode%' 
                     AND nama_bahan LIKE '$bahan%'
+                    and harga 
                     GROUP BY
                     DATE_FORMAT(TGL_TRANSAKSI,'%Y%m%d'),
-                    NAMA_BAHAN,
-                    HARGA";
+                    NAMA_BAHAN";
                 }
                 else{
                     $sql = "SELECT 
@@ -1549,7 +1545,7 @@ return function (App $app) {
                     AND periode LIKE '$periode%' 
                     AND nama_bahan LIKE '$bahan%'";
                 }else{
-                    $sql = "SELECT * FROM v_saldo_akhir WHERE id_cabang=:id_cabang";
+                    $sql = "SELECT * FROM v_saldo_akhir WHERE id_cabang=:id_cabang group by ID_BAHAN, HARGA";
                 }
             }
 
@@ -1566,12 +1562,13 @@ return function (App $app) {
             return $newResponse;
         });
         //END V SALDO
-
         //V SALDO PERIODE HARIAN 
         $app->get("/vsaldoHarian/{id_cabang}", function (Request $request, Response $response, $args){
             $id = $args["id_cabang"];
-            $sql = "SELECT * FROM `v_saldo_periode_hari` WHERE PERIODE = date_format(now(),'%Y-%m-%d')
-            and ID_CABANG = :id_cabang";
+            $sql = "SELECT id_cabang,nama_cabang,id_bahan,nama_bahan,sum(debet) as debet, sum(kredit) as kredit,tgl_transaksi,harga, sum(debet)-sum(kredit) as total_saldo,
+            (select sum(debet)-sum(kredit) from v_saldo where id_bahan = vs.id_bahan and id_cabang = vs.id_cabang and date_format(tgl_transaksi,'%Y-%m-%d') < date_format(now(),'%Y-%m-%d')) as saldo_awal  
+            FROM `v_saldo` vs where id_cabang = :id_cabang
+            group by id_bahan";
             $stmt = $this->db->prepare($sql);
 
             $data = [
@@ -1608,10 +1605,9 @@ return function (App $app) {
             if($stmt->execute($data)){
                 if ($stmt->rowCount() > 0) {
                     $data = $stmt->fetchAll();
-
                     $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
                 }else{
-                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Tidak ada data yang ditampilkan','CODE'=>404,'DATA'=>null);
                 }
             }
             
