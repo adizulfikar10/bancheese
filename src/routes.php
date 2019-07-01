@@ -32,6 +32,8 @@ return function (App $app) {
                 ":password" => $password
             ];
 
+            var_dump($data );
+
             if($stmt->execute($data)){
                 if ($stmt->rowCount() > 0) {
                     $data = $stmt->fetch();
@@ -718,7 +720,7 @@ return function (App $app) {
 
         $app->post("/bahanbaku/{id}", function (Request $request, Response $response, $args){
             $id = $args["id"];
-            $new_menudetail = $request->getParsedBody();
+            $new_bahan = $request->getParsedBody();
             $sql = "UPDATE tbl_bahan_baku SET id_kategori=:id_kategori,nama_bahan=:nama_bahan,satuan=:satuan, dtm_upd=:dtm_upd WHERE id_bahan=:id";
             $stmt = $this->db->prepare($sql);
             
