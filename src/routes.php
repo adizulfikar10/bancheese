@@ -32,8 +32,6 @@ return function (App $app) {
                 ":password" => $password
             ];
 
-            var_dump($data );
-
             if($stmt->execute($data)){
                 if ($stmt->rowCount() > 0) {
                     $data = $stmt->fetch();
@@ -539,10 +537,8 @@ return function (App $app) {
 
         $app->delete("/menudetail/{id}", function (Request $request, Response $response, $args){
             $id = $args["id"];
-            echo $id;
             $sql = "DELETE FROM tbl_menu_detail WHERE id_menu_detail=:id";
             $stmt = $this->db->prepare($sql);
-            echo $sql;
 
             $data = [
                 ":id" => $id
