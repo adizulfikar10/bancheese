@@ -24,7 +24,7 @@ return function (App $app) {
             $username = $user['username'];
             $password = sha1($user['password']);
 
-            $sql = "SELECT username,role,nama_user,id_cabang,id_user FROM tbl_user WHERE username =:username AND password=:password";
+            $sql = "SELECT a.username,a.role,a.nama_user,a.id_cabang,a.id_user,b.nama_cabang,b.alamat FROM tbl_user a join tbl_cabang b on a.id_cabang = b.id_cabang WHERE a.username =:username AND a.password=:password";
             $stmt = $this->db->prepare($sql);
 
             $data = [
