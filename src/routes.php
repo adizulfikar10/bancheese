@@ -71,7 +71,7 @@ return function (App $app) {
             if($stmt->execute($data)){
                 if ($stmt->rowCount() > 0) {
                     $data = $stmt->fetch();
-                    if($data['role'] == 'admin' or $data['role' == 'ADMIN']){
+                    if($data['role'] == 'admin' or $data['role'] == 'ADMIN'){
                         $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
                         $newResponse = $response->withJson($result);
                         return $newResponse;
