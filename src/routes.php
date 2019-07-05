@@ -1783,7 +1783,7 @@ return function (App $app) {
             $sql = "";
 
             if($menu == 'all'){
-                $sql = " SELECT DISTINCT a.ID_CABANG, a.NAMA_CABANG, a.ALAMAT FROM `tbl_cabang` a where a.id_cabang not in (select b.id_cabang from `tbl_device` b where b.id_device != :id_device)";
+                $sql = " SELECT DISTINCT a.ID_CABANG, a.NAMA_CABANG, a.ALAMAT FROM `tbl_cabang` a where a.id_cabang not in (select b.id_cabang from `tbl_device` b where b.id_device = :id_device)";
             }else if($menu == 'store'){
                 $sql = "SELECT distinct a.ID_CABANG, a.NAMA_CABANG, a.ALAMAT FROM `tbl_cabang` a join `tbl_device` b on a.id_cabang = b.id_cabang where b.id_device = :id_device";
             }else{
