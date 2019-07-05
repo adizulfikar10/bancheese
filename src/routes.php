@@ -50,6 +50,75 @@ return function (App $app) {
 
         });
 
+        $app->post("/loginMobile", function (Request $request, Response $response, $args){
+            $user = $request->getParsedBody();
+            $username = $user['username'];
+            $password = sha1($user['password']);
+            $id_device = $user['id_device'];
+
+
+
+            $sql = "SELECT a.username,a.role,a.nama_user,a.id_cabang,a.id_user,b.nama_cabang,b.alamat FROM tbl_user a 
+            join tbl_cabang b on a.id_cabang = b.id_cabang WHERE 
+            a.username =convert(:username using utf8mb4) collate utf8mb4_bin AND a.password=:password";
+            $stmt = $this->db->prepare($sql);
+
+            $data = [
+                ":username" => $username,
+                ":password" => $password
+            ];
+
+            if($stmt->execute($data)){
+                if ($stmt->rowCount() > 0) {
+                    $data = $stmt->fetch();
+                    if($data['role'] == 'admin'){
+                        $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                        $newResponse = $response->withJson($result);
+                        return $newResponse;
+                    }else{
+                        $checkDevice = "SELECT device_name FROM `tbl_device` WHERE id_device = :id_device";
+                        $stmtCheck = $this->db->prepare($checkDevice);
+                        
+                        $dataCheck = [
+                            ":id_device" => $id_device
+                        ];
+                        $stmtCheck->execute($dataCheck);
+                        if ($stmtCheck->rowCount() == 0) {
+                            $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Perangkat ini belum terdaftar','CODE'=>500,'DATA'=>null);
+                            $newResponse = $response->withJson($result);
+                            return $newResponse;
+                        }
+
+                        //CHECK USER
+
+                        $checkUser = "SELECT device_name FROM `tbl_device` WHERE id_device = :id_device and id_cabang = :id_cabang";
+                        $stmtCheckUser = $this->db->prepare($checkUser);
+                        
+                        $dataCheckUser = [
+                            ":id_device" => $id_device,
+                            ":id_cabang" => $data['id_cabang']
+                        ];
+                        $stmtCheckUser->execute($dataCheckUser);
+                        if ($stmtCheckUser->rowCount() == 0) {
+                            $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Anda tidak diijinkan masuk dengan perangkat ini','CODE'=>500,'DATA'=>null);
+                            $newResponse = $response->withJson($result);
+                            return $newResponse;
+                        }
+                        $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                    }
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Username atau tidak ditemukan','CODE'=>400,'DATA'=>null);
+                }
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Error executing query','CODE'=>500,'DATA'=>null);
+
+            }
+
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+
+        });
+
         //BAGIAN USER
 
         $app->post("/changePassword", function (Request $request, Response $response){
@@ -1115,6 +1184,27 @@ return function (App $app) {
             return $newResponse;
         });
 
+        $app->post("/transaksi/{id}/void", function (Request $request, Response $response, $args){
+            $id = $args["id"];
+            $new_transaksi = $request->getParsedBody();
+            $sql = "UPDATE tbl_transaksi SET status='VOID' WHERE id_transaksi=:id";
+            $stmt = $this->db->prepare($sql);
+            $data = [
+                ":id" => $id
+            ];
+            
+            if($stmt->execute($data)){
+                if ($stmt->rowCount() > 0) {
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                }
+            }
+
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
         $app->delete("/transaksi/{id}", function (Request $request, Response $response, $args){
             $id = $args["id"];
             $sql = "DELETE FROM tbl_transaksi WHERE id_transaksi=:id";
@@ -1626,6 +1716,102 @@ return function (App $app) {
             return $newResponse;
         });
         //END VIEW
+        $app->post("/daftarCabang/{id_cabang}", function (Request $request, Response $response, $args){
+            $id = $args["id_cabang"];
+            $cabang = $request->getParsedBody();
+            $id_device = $cabang['id_device'];
+            $device_name = $cabang['device_name'];
+
+            $sqlDelete = "DELETE FROM `tbl_device` WHERE `tbl_device`.`id_device` = :id_device";
+            $stmtDelete = $this->db->prepare($sqlDelete);
+
+            $data_hapus = [
+                ":id_device" => $id_device
+            ];
+
+            $stmtDelete->execute($data_hapus);
+
+
+
+            $sql = "INSERT INTO `tbl_device` (`id_device`, `id_cabang`, `device_name`) VALUES (:id_device, :id_cabang, :device_name);";
+            $stmt = $this->db->prepare($sql);
+            
+            $data = [
+                ":id_device" => $id_device,
+                ":id_cabang" => $id,
+                ":device_name" => $device_name
+            ];
+            
+            if($stmt->execute($data)){
+                if ($stmt->rowCount() > 0) {
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                }
+            }
+
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+        $app->delete("/daftarCabang/{id_cabang}", function (Request $request, Response $response, $args){
+            $id = $args["id_cabang"];
+            $cabang = $request->getParsedBody();
+            $id_device = $cabang['id_device'];
+
+            $sqlDelete = "DELETE FROM `tbl_device` WHERE `tbl_device`.`id_device` = :id_device and `tbl_device`.`id_cabang` = :id_cabang";
+            $stmtDelete = $this->db->prepare($sqlDelete);
+
+            $data_hapus = [
+                ":id_device" => $id_device,
+                ":id_cabang" => $id
+            ];
+
+            if($stmtDelete->execute($data_hapus)){
+                if ($stmtDelete->rowCount() > 0) {
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'Data berhasil dibapus','CODE'=>200,'DATA'=>null);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>$data_hapus);
+                }
+            }
+
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+        $app->get("/daftarCabang/{menu}", function (Request $request, Response $response, $args){
+            $menu = $args["menu"];
+            $id_device = urldecode($request->getQueryParam("id_device"));
+            $sql = "";
+
+            if($menu == 'all'){
+                $sql = "SELECT a.ID_CABANG, a.NAMA_CABANG, a.ALAMAT, b.id_device FROM `tbl_cabang` a left join `tbl_device` b on a.id_cabang = b.id_cabang where b.id_device is null or b.id_device != :id_device";
+            }else if($menu == 'store'){
+                $sql = "SELECT a.ID_CABANG, a.NAMA_CABANG, a.ALAMAT, b.id_device FROM `tbl_cabang` a left join `tbl_device` b on a.id_cabang = b.id_cabang where b.id_device = :id_device";
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Not Found','CODE'=>404,'DATA'=>null);
+                $newResponse = $response->withJson($result);
+                return $newResponse;
+            }
+
+            $stmt = $this->db->prepare($sql);
+            
+            $data = [
+                ":id_device" => $id_device
+            ];
+            
+            if($stmt->execute($data)){
+                if ($stmt->rowCount() > 0) {
+                    $data = $stmt->fetchAll();
+
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                }
+            }
+
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+        
     });
 
 
