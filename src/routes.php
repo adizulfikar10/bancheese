@@ -1783,9 +1783,9 @@ return function (App $app) {
             $sql = "";
 
             if($menu == 'all'){
-                $sql = "SELECT a.ID_CABANG, a.NAMA_CABANG, a.ALAMAT, b.id_device FROM `tbl_cabang` a left join `tbl_device` b on a.id_cabang = b.id_cabang where b.id_device is null or b.id_device != :id_device";
+                $sql = " SELECT distinct a.ID_CABANG, a.NAMA_CABANG, a.ALAMAT FROM `tbl_cabang` a left join `tbl_device` b on a.id_cabang = b.id_cabang where b.id_device is null or b.id_device != :id_device";
             }else if($menu == 'store'){
-                $sql = "SELECT a.ID_CABANG, a.NAMA_CABANG, a.ALAMAT, b.id_device FROM `tbl_cabang` a left join `tbl_device` b on a.id_cabang = b.id_cabang where b.id_device = :id_device";
+                $sql = "SELECT a.ID_CABANG, a.NAMA_CABANG, a.ALAMAT FROM `tbl_cabang` a left join `tbl_device` b on a.id_cabang = b.id_cabang where b.id_device = :id_device";
             }else{
                 $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Not Found','CODE'=>404,'DATA'=>null);
                 $newResponse = $response->withJson($result);
