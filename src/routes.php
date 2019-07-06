@@ -1780,6 +1780,7 @@ return function (App $app) {
         
         $app->get("/daftarCabang/{menu}", function (Request $request, Response $response, $args){
             $menu = $args["menu"];
+            
             $id_device = urldecode($request->getQueryParam("id_device"));
             $sql = "";
 
@@ -1823,6 +1824,37 @@ return function (App $app) {
                     $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
                 }else{
                     $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                }
+            }
+
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
+        $app->post("/addVersion", function (Request $request, Response $response, $args){
+            $versi = $request->getParsedBody();
+            $major = $versi['major'];
+            $minor = $versi['minor'];
+            $patch = $versi['patch'];
+            $link = $versi['link'];
+            $desc = $versi['deskripsi'];
+
+            $sql = "INSERT INTO `tbl_version` (`ID_VERSI`, `MAJOR`, `MINOR`, `PATCH`, `LINK`, `DESKRIPSI`) VALUES (NULL, :major, :minor, :patch, :link, :deskripsi);";
+            $stmt = $this->db->prepare($sql);
+
+            $data = [
+                ":major" => $major,
+                ":minor" => $minor,
+                ":patch" => $patch,
+                ":link" => $link,
+                ":deskripsi" => $desc
+            ];
+
+            if($stmt->execute($data)){
+                if ($stmt->rowCount() > 0) {
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Gagal untuk menambah versi aplikasi','CODE'=>500,'DATA'=>null);
                 }
             }
 
