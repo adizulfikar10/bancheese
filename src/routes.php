@@ -1854,16 +1854,14 @@ return function (App $app) {
         $app->get("/getVersion", function (Request $request, Response $response, $args){
             $sql = "SELECT ID_VERSI, CONCAT(MAJOR,'.',MINOR,'.',PATCH) AS VERSION, LINK, DESKRIPSI from tbl_version";
             $stmt = $this->db->prepare($sql);
-            if($stmt->execute()){
-                if ($stmt->rowCount() > 0) {
-                    $data = $stmt->fetch();
-
-                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
-                }else{
-                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
-                }
+            $stmt->execute();
+            $data = $stmt->fetchAll();
+            if ($stmt->rowCount() > 0) {
+                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
             }
-
+            
             $newResponse = $response->withJson($result);
             return $newResponse;
         });
