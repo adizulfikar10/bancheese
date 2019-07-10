@@ -977,22 +977,59 @@ return function (App $app) {
 
             $new_kredit = $request->getParsedBody();
             
-            $sql = "INSERT INTO tbl_kredit (id_bahan,id_cabang,id_user,qty,harga) VALUES (:id_bahan,:id_cabang,:id_user,:qty,:harga)";
+            $sql = "SELECT * from (SELECT dbt.ID_DEBET, dbt.ID_BAHAN, dbt.ID_CABANG,dbt.ID_USER,dbt.HARGA, dbt.qty-COALESCE(sum(krd.QTY),0) as QTY from tbl_debet as dbt 
+                    left join tbl_kredit as krd on dbt.ID_DEBET = krd.ID_DEBET 
+                    group by dbt.ID_DEBET) res where res.qty > 0 and id_bahan = :id_bahan and ID_CABANG = :id_cabang";
             $stmt = $this->db->prepare($sql);
             
             $data = [
                 ":id_bahan" => $new_kredit["id_bahan"],
-                ":id_cabang" => $new_kredit["id_cabang"],
-                ":id_user" => $new_kredit["id_user"],
-                ":qty" => $new_kredit["qty"],
-                ":harga" => $new_kredit["harga"],
+                ":id_cabang" => $new_kredit["id_cabang"]
             ];
             
             if($stmt->execute($data)){
                 if ($stmt->rowCount() > 0) {
-                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                    $data = $stmt->fetchAll();
+                    $total = 0;
+
+                    foreach($data as $dt){
+                        $total += $dt['QTY']; 
+                    }
+
+                    if($total < $new_kredit['qty']){
+                        $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Saldo tidak mencukupi','CODE'=>500,'DATA'=>NULL);
+                        $newResponse = $response->withJson($result);
+                        return $newResponse;
+                    }
+
+                    $i = 0;
+                    $sisa = 0;
+                    $input_qty = $new_kredit['qty'];
+
+                    while($input_qty > 0){
+                        $sisa_qty = 0;
+                        if($input_qty > $data[$i]['QTY']){
+                            $input_qty -= $data[$i]['QTY'];
+                            $sisa_qty = $data[$i]['QTY'];
+                        }else{
+                            $input_qty -= $data[$i]['QTY'];
+                            $sisa_qty = $data[$i]['QTY']+$input_qty;
+                        }
+                        if ($sisa_qty > 0) {
+                            $query = "INSERT INTO `tbl_kredit` (`ID_DEBET`, `ID_BAHAN`, `ID_CABANG`, `ID_USER`, `QTY`, `HARGA`) 
+                            VALUES (".$data[$i]['ID_DEBET'].", ".$data[$i]['ID_BAHAN'].", ".$data[$i]['ID_CABANG'].", ".$new_kredit['id_user'].",
+                            ".$sisa_qty.", ".$data[$i]['HARGA'].");";
+
+                            $stmt2 = $this->db->prepare($query);
+                            $stmt2->execute();
+                        }
+
+                        $sisa += $data[$i]['QTY'];
+                        $i++;
+                    }
+                   $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>NULL);
                 }else{
-                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Saldo tidak mencukupi','CODE'=>500,'DATA'=>null);
                 }
             }
 
@@ -1827,6 +1864,22 @@ return function (App $app) {
                 }
             }
 
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
+         
+        $app->get("/getLatestVersion", function (Request $request, Response $response, $args){
+            $sql = "SELECT CONCAT(MAJOR,'.',MINOR,'.',PATCH) AS VERSION FROM `tbl_version` order by major desc, minor desc, patch desc limit 1";
+            $stmt = $this->db->prepare($sql);
+            if($stmt->execute()){
+                if ($stmt->rowCount() > 0) {
+                    $data = $stmt->fetch();
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                }
+            }
             $newResponse = $response->withJson($result);
             return $newResponse;
         });
