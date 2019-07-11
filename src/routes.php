@@ -979,7 +979,7 @@ return function (App $app) {
             
             $sql = "SELECT * from (SELECT dbt.ID_DEBET, dbt.ID_BAHAN, dbt.ID_CABANG,dbt.ID_USER,dbt.HARGA, dbt.qty-COALESCE(sum(krd.QTY),0) as QTY from tbl_debet as dbt 
             left join tbl_kredit as krd on dbt.ID_DEBET = krd.ID_DEBET 
-            group by dbt.ID_DEBET) res where res.qty > 0 and id_bahan = :id_bahan and ID_CABANG = :id_cabang";
+            group by dbt.ID_DEBET) res where res.qty > 0 and id_bahan = :id_bahan and ID_CABANG = :id_cabang ORDER BY res.id_debet";
             $stmt = $this->db->prepare($sql);
             
             $data = [
