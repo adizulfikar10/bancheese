@@ -1529,7 +1529,7 @@ return function (App $app) {
                     WHERE id_cabang $where_cabang 
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
                     GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m-%d')
-                    ORDER BY TGL_TRANSAKSI";
+                    ORDER BY DATE_FORMAT(TGL_TRANSAKSI,'%Y%m%d')";
             }else if ($periode == 'Monthly'){
                 $sql ="SELECT ID_CABANG
                     ,DATE_FORMAT(TGL_TRANSAKSI,'%Y%m') AS PERIODE
