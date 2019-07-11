@@ -25,7 +25,7 @@ return function (App $app) {
             $password = sha1($user['password']);
 
             $sql = "SELECT a.username,a.role,a.nama_user,a.id_cabang,a.id_user,b.nama_cabang,b.alamat FROM tbl_user a 
-            join tbl_cabang b on a.id_cabang = b.id_cabang WHERE 
+            left join tbl_cabang b on a.id_cabang = b.id_cabang WHERE 
             a.username =convert(:username using utf8mb4) collate utf8mb4_bin AND a.password=:password";
             $stmt = $this->db->prepare($sql);
 
@@ -37,9 +37,13 @@ return function (App $app) {
             if($stmt->execute($data)){
                 if ($stmt->rowCount() > 0) {
                     $data = $stmt->fetch();
-                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                    if (strtoupper($data['role'])=='ADMIN'){
+                        $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                    }else{
+                        $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'User tidak memiliki akses','CODE'=>400,'DATA'=>null);    
+                    }
                 }else{
-                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Username atau tidak ditemukan','CODE'=>400,'DATA'=>null);
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Username atau Password tidak ditemukan','CODE'=>400,'DATA'=>null);
                 }
             }else{
                 $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Error executing query','CODE'=>500,'DATA'=>null);
