@@ -981,8 +981,6 @@ return function (App $app) {
                     left join tbl_kredit as krd on dbt.ID_DEBET = krd.ID_DEBET 
                     group by dbt.ID_DEBET) res where res.qty > 0 and id_bahan = :id_bahan and ID_CABANG = :id_cabang";
             $stmt = $this->db->prepare($sql);
-
-            echo $sql;
             
             $data = [
                 ":id_bahan" => $new_kredit["id_bahan"],
