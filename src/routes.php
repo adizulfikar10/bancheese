@@ -24,7 +24,7 @@ return function (App $app) {
             $username = $user['username'];
             $password = sha1($user['password']);
 
-            $sql = "SELECT a.username,a.role,a.nama_user,a.id_cabang,a.id_user,b.nama_cabang,b.alamat FROM tbl_user a 
+            $sql = "SELECT a.id_user,a.username,a.role,a.nama_user,a.id_cabang,a.id_user,b.nama_cabang,b.alamat FROM tbl_user a 
             left join tbl_cabang b on a.id_cabang = b.id_cabang WHERE 
             a.username =convert(:username using utf8mb4) collate utf8mb4_bin AND a.password=:password";
             $stmt = $this->db->prepare($sql);
@@ -852,12 +852,26 @@ return function (App $app) {
             return $newResponse;
         });
 
-        $app->get("/debet/{id}", function (Request $request, Response $response, $args){
-            $id = $args["id"];
-            $sql = "SELECT * FROM tbl_debet WHERE id_debet=:id";
+        $app->get("/debet/{harga}/{id_bahan}/{id_cabang}", function (Request $request, Response $response, $args){
+            $harga = $args["harga"];
+            $id_bahan = $args["id_bahan"];
+            $id_cabang = $args["id_cabang"];
+            $sql = "SELECT 
+                    DATE_FORMAT(TGL_DEBET,'%d %M %y') AS TANGGAL,
+                    ID_DEBET,
+                    ID_BAHAN,
+                    ID_CABANG,
+                    HARGA,
+                    QTY
+                    FROM tbl_debet WHERE harga=:harga AND id_bahan=:id_bahan AND id_cabang=:id_cabang ORDER BY TGL_DEBET DESC";
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([":id" => $id]);
-            $data = $stmt->fetch();
+            $data = [
+                ":harga" => $harga,
+                ":id_bahan" => $id_bahan,
+                ":id_cabang" => $id_cabang,
+                ];
+            $stmt->execute($data);
+            $data = $stmt->fetchAll();
             if ($stmt->rowCount() > 0) {
                 $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
             }else{
@@ -961,12 +975,31 @@ return function (App $app) {
             return $newResponse;
         });
 
-        $app->get("/kredit/{id}", function (Request $request, Response $response, $args){
-            $id = $args["id"];
-            $sql = "SELECT * FROM tbl_kredit WHERE id_kredit=:id";
+        $app->get("/kredit/{harga}/{id_bahan}/{id_cabang}", function (Request $request, Response $response, $args){
+            $harga = $args["harga"];
+            $id_bahan = $args["id_bahan"];
+            $id_cabang = $args["id_cabang"];
+            $sql = "SELECT 
+                    DATE_FORMAT(TGL_KREDIT,'%d %M %y') AS TANGGAL,
+                    ID_DEBET,
+                    ID_KREDIT,
+                    ID_BAHAN,
+                    ID_CABANG,
+                    HARGA,
+                    QTY
+                    FROM tbl_kredit WHERE harga=:harga 
+                    AND id_bahan=:id_bahan 
+                    AND id_cabang=:id_cabang ORDER BY TGL_KREDIT DESC";
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([":id" => $id]);
-            $data = $stmt->fetch();
+
+            $data = [
+                ":harga" => $harga,
+                ":id_bahan" => $id_bahan,
+                ":id_cabang" => $id_cabang,
+            ];
+            
+            $stmt->execute($data);
+            $data = $stmt->fetchAll();
             if ($stmt->rowCount() > 0) {
                 $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
             }else{
@@ -1020,9 +1053,10 @@ return function (App $app) {
                             $sisa_qty = $data[$i]['QTY']+$input_qty;
                         }
                         if ($sisa_qty > 0) {
+                            $setHarga = ($new_kredit['harga']>0)?$new_kredit['harga']:$data[$i]['HARGA'];
                             $query = "INSERT INTO `tbl_kredit` (`ID_DEBET`, `ID_BAHAN`, `ID_CABANG`, `ID_USER`, `QTY`, `HARGA`) 
                             VALUES (".$data[$i]['ID_DEBET'].", ".$data[$i]['ID_BAHAN'].", ".$data[$i]['ID_CABANG'].", ".$new_kredit['id_user'].",
-                            ".$sisa_qty.", ".$data[$i]['HARGA'].");";
+                            ".$sisa_qty.", ".$setHarga.");";
 
                             $stmt2 = $this->db->prepare($query);
                             $stmt2->execute();
@@ -1465,6 +1499,7 @@ return function (App $app) {
             $cabang = $request->getQueryParam("cabang");
             $tanggal = $request->getQueryParam("tgl");
             $periode = $request->getQueryParam("periode");
+            $status = $request->getQueryParam("status");
 
             
             if($periode=='Daily'){
@@ -1475,7 +1510,8 @@ return function (App $app) {
                 $where= "DATE_FORMAT(TGL_TRANSAKSI,'%Y') = '$tanggal'";    
             }
             
-            $where.=($cabang!='all')?"AND ID_CABANG=$cabang":"";
+            $where.=($cabang!='all')?" AND ID_CABANG=$cabang":"";
+            $where.=($status!='')?" AND STATUS='$status'":"";
 
             $sql = "SELECT 
             ID_MENU,
@@ -1511,6 +1547,7 @@ return function (App $app) {
             return $newResponse;
         });
         $app->get("/vtransaksi", function (Request $request, Response $response, $args){
+            $status = $request->getQueryParam("status");
             $cabang = $request->getQueryParam("cabang");
             $kasir = $request->getQueryParam("kasir");
             $metode = $request->getQueryParam("metode");
@@ -1518,25 +1555,38 @@ return function (App $app) {
             $status = $request->getQueryParam("status");
             $periode = $request->getQueryParam("periode");
 
-            $where_cabang = ($cabang != "")?"=$cabang":"LIKE '%'";
+            $where = ($cabang != "")?"=$cabang":"LIKE '%'";
+            $where .= ($status != "")?" AND STATUS = '$status'":"LIKE '%'";
 
             if ($periode == 'Daily'){
-                $sql ="SELECT ID_CABANG,
+                $sql ="SELECT 
+                    ID_CABANG,
                     DATE_FORMAT(TGL_TRANSAKSI,'%Y%m%d') AS PERIODE
                     ,DATE_FORMAT(TGL_TRANSAKSI,'%e %b %Y') AS TGL_TRANSAKSI
-                    ,sum(NET_HARGA) AS NET_HARGA,sum(QTY) AS QTY 
+                    ,sum(NET_HARGA) AS NET_HARGA,sum(QTY) AS QTY
+                    ,COALESCE((select sum(harga) from tbl_kredit where ID_CABANG = 
+                        v_transaksi.ID_CABANG AND 
+                        DATE_FORMAT(TGL_KREDIT,'%e %b %Y') =  
+                        DATE_FORMAT(v_transaksi.TGL_TRANSAKSI,'%e %b %Y')),0) 
+                    AS KREDIT
                     FROM v_transaksi
-                    WHERE id_cabang $where_cabang 
+                    WHERE id_cabang $where
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
                     GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m-%d')
                     ORDER BY DATE_FORMAT(TGL_TRANSAKSI,'%Y%m%d')";
             }else if ($periode == 'Monthly'){
-                $sql ="SELECT ID_CABANG
+                $sql ="SELECT 
+                    ID_CABANG
                     ,DATE_FORMAT(TGL_TRANSAKSI,'%Y%m') AS PERIODE
                     ,DATE_FORMAT(TGL_TRANSAKSI,'%b %Y') AS TGL_TRANSAKSI
-                    ,sum(NET_HARGA) AS NET_HARGA,sum(QTY) AS QTY 
+                    ,sum(NET_HARGA) AS NET_HARGA,sum(QTY) AS QTY
+                    ,COALESCE((select sum(harga) from tbl_kredit where ID_CABANG = 
+                        v_transaksi.ID_CABANG AND 
+                        DATE_FORMAT(TGL_KREDIT,'%b %Y') =  
+                        DATE_FORMAT(v_transaksi.TGL_TRANSAKSI,'%b %Y')),0) 
+                    AS KREDIT 
                     FROM v_transaksi
-                    WHERE id_cabang $where_cabang 
+                    WHERE id_cabang $where 
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
                     GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y-%m')
                     ORDER BY DATE_FORMAT(TGL_TRANSAKSI,'%Y%m')";
@@ -1544,15 +1594,20 @@ return function (App $app) {
                 $sql ="SELECT ID_CABANG
                     ,DATE_FORMAT(TGL_TRANSAKSI,'%Y') AS PERIODE
                     ,DATE_FORMAT(TGL_TRANSAKSI,'%Y') AS TGL_TRANSAKSI
-                    ,sum(NET_HARGA) AS NET_HARGA,sum(QTY) AS QTY 
+                    ,sum(NET_HARGA) AS NET_HARGA,sum(QTY) AS QTY
+                    ,COALESCE((select sum(harga) from tbl_kredit where ID_CABANG = 
+                        v_transaksi.ID_CABANG AND 
+                        DATE_FORMAT(TGL_KREDIT,'%Y') =  
+                        DATE_FORMAT(v_transaksi.TGL_TRANSAKSI,'%Y')),0) 
+                    AS KREDIT
                     FROM v_transaksi
-                    WHERE id_cabang $where_cabang 
+                    WHERE id_cabang $where
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
                     GROUP BY DATE_FORMAT(TGL_TRANSAKSI,'%Y')
                     ORDER BY DATE_FORMAT(TGL_TRANSAKSI,'%Y%m')";
             }
                 // $sql = "SELECT * FROM v_transaksi";
-
+            
             $stmt = $this->db->prepare($sql);
             $stmt->execute();
             $data = $stmt->fetchAll();
@@ -1587,7 +1642,7 @@ return function (App $app) {
         //--END V TRANSAKSI
         //-- V MENU
         $app->get("/vmenu", function (Request $request, Response $response){
-            $sql = "SELECT * FROM v_menu";
+            $sql = "SELECT * FROM v_menu where STATUS <> 0";
             $stmt = $this->db->prepare($sql);
             $stmt->execute();
             $data = $stmt->fetchAll();
@@ -1603,7 +1658,7 @@ return function (App $app) {
 
         $app->get("/vmenu/{id}", function (Request $request, Response $response, $args){
             $id = $args["id"];
-            $sql = "SELECT * FROM v_menu WHERE id_cabang=:id";
+            $sql = "SELECT * FROM v_menu WHERE id_cabang=:id ";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([":id" => $id]);
             $data = $stmt->fetchAll();
@@ -1678,7 +1733,10 @@ return function (App $app) {
                     AND periode LIKE '$periode%' 
                     AND nama_bahan LIKE '$bahan%'";
                 }else{
-                    $sql = "SELECT NAMA_BAHAN,
+                    $sql = "SELECT 
+                    ID_DEBET,
+                    ID_BAHAN,
+                    NAMA_BAHAN,
                     SATUAN, 
                     SUM(KREDIT)AS KREDIT,
                     SUM(DEBET)AS DEBET,
@@ -1691,6 +1749,7 @@ return function (App $app) {
                 }
             }
 
+            
             $stmt = $this->db->prepare($sql);
             $stmt->execute([":id_cabang" => $id]);
             $data = $stmt->fetchAll();
