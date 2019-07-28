@@ -1975,6 +1975,61 @@ return function (App $app) {
             $newResponse = $response->withJson($result);
             return $newResponse;
         });
+
+        // NOTIF
+        $app->get("/notif", function (Request $request, Response $response, $args){
+            $sql = "SELECT * FROM V_NOTIF WHERE MARK = 0";
+            $stmt = $this->db->prepare($sql);
+            if($stmt->execute()){
+                if ($stmt->rowCount() > 0) {
+                    $data = $stmt->fetchAll();
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                }
+            }
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
+        $app->post("/notif/{id}", function (Request $request, Response $response, $args){
+            $id = $args["id"];
+            $new_transaksi_detail = $request->getParsedBody();
+            $sql = "UPDATE tbl_notif SET VIEWED=1 WHERE id_notif=:id";
+            $stmt = $this->db->prepare($sql);
+            
+            $data = [
+                ":id" => $id
+            ];
+            
+            if($stmt->execute($data)){
+                if ($stmt->rowCount() > 0) {
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                }
+            }
+
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+        
+        $app->post("/notif", function (Request $request, Response $response, $args){
+            $sql = "UPDATE tbl_notif SET VIEWED=1, MARK=1";
+            $stmt = $this->db->prepare($sql);
+            
+            if($stmt->execute()){
+                if ($stmt->rowCount() > 0) {
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                }
+            }
+
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
         
     });
 };
