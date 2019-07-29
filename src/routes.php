@@ -647,9 +647,10 @@ return function (App $app) {
             $newResponse = $response->withJson($result);
             return $newResponse;
         });
-        $app->get("/kategori/jenis/{jenis}", function (Request $request, Response $response){
+        $app->get("/kategori/jenis/{jenis}", function (Request $request, Response $response,$args){
             $jenis = $args["jenis"];
             $sql = "SELECT * FROM tbl_kategori where jenis = :jenis ";
+            echo $sql;
             $stmt = $this->db->prepare($sql);
             $stmt->execute([":jenis" => $jenis]);
             $data = $stmt->fetchAll();
@@ -1317,6 +1318,168 @@ return function (App $app) {
 
 
         //END TRANSAKSI
+
+        //BAGIAN TRANSAKSI KREDIT
+        
+        $app->get("/transaksi_kredit", function (Request $request, Response $response){
+            $sql = "SELECT a.*,b.NAMA_KATEGORI FROM tbl_transaksi_kredit a join tbl_kategori b on a.id_kategori = b.id_kategori";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $data = $stmt->fetchAll();
+            if ($stmt->rowCount() > 0) {
+                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Tidak ada data yang ditampilkan','CODE'=>404,'DATA'=>null);
+            }
+            
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
+        $app->get("/transaksi_kredit/cabang/{id}", function (Request $request, Response $response,$args){
+            $id = $args["id"];
+            $sql = "SELECT a.*,b.NAMA_KATEGORI FROM tbl_transaksi_kredit a join tbl_kategori b on a.id_kategori = b.id_kategori where a.id_cabang = :id";
+            $stmt = $this->db->prepare($sql);
+            $data = [":id" => $id];
+            if($stmt->execute($data)){
+                $data = $stmt->fetchAll();
+                if ($stmt->rowCount() > 0) {
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Tidak ada data yang ditampilkan','CODE'=>404,'DATA'=>null);
+                }
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Terjadi kesalahan saat mengeksekusi','CODE'=>500,'DATA'=>null);
+
+            }
+            
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
+        $app->get("/transaksi_kredit/user/{id}/{cabang}", function (Request $request, Response $response,$args){
+            $id = $args["id"];
+            $cabang = $args["cabang"];
+            $sql = "SELECT a.*,b.NAMA_KATEGORI FROM tbl_transaksi_kredit a join tbl_kategori b on a.id_kategori = b.id_kategori 
+                where a.id_user = :id and a.id_cabang = :cabang and date_format(a.dtm_crt,'%Y-%m-%d') = date_format(sysdate(),'%Y-%m-%d')";
+            $stmt = $this->db->prepare($sql);
+            $data = [":id" => $id, ":cabang" => $cabang];
+            if($stmt->execute($data)){
+                $data = $stmt->fetchAll();
+                if ($stmt->rowCount() > 0) {
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Tidak ada data yang ditampilkan','CODE'=>404,'DATA'=>null);
+                }
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Terjadi kesalahan saat mengeksekusi','CODE'=>500,'DATA'=>null);
+            }
+            
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
+        $app->get("/transaksi_kredit/kategori/{id}", function (Request $request, Response $response,$args){
+            $id = $args["id"];
+            $sql = "SELECT a.*,b.NAMA_KATEGORI FROM tbl_transaksi_kredit a join tbl_kategori b on a.id_kategori = b.id_kategori where a.id_kategori = :id";
+            $stmt = $this->db->prepare($sql);
+            $data = [":id" => $id];
+            if($stmt->execute($data)){
+                $data = $stmt->fetchAll();
+                if ($stmt->rowCount() > 0) {
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Tidak ada data yang ditampilkan','CODE'=>404,'DATA'=>null);
+                }
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Terjadi kesalahan saat mengeksekusi','CODE'=>500,'DATA'=>null);
+            }
+            
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+        
+
+        $app->post("/transaksi_kredit", function (Request $request, Response $response){
+            $new_transaksi_detail = $request->getParsedBody();
+            $sql = "INSERT into tbl_transaksi_kredit 
+                (`ID_TRANSAKSI_KREDIT`, `ID_CABANG`, `ID_USER`, `ID_KATEGORI`, `KETERANGAN`, `BIAYA`, `DTM_CRT`) 
+                values (null,:id_cabang,:id_user,:id_kategori,:keterangan,:biaya,CURRENT_TIMESTAMP)";
+            $stmt = $this->db->prepare($sql);
+            
+            $data = [
+                ":id_cabang" => $new_transaksi_detail["id_cabang"],
+                ":id_user" => $new_transaksi_detail["id_user"],
+                ":id_kategori" => $new_transaksi_detail["id_kategori"],
+                ":keterangan" => $new_transaksi_detail["keterangan"],
+                ":biaya" => $new_transaksi_detail["biaya"]
+            ];
+            
+            if($stmt->execute($data)){
+                if ($stmt->rowCount() > 0) {
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'Data berhasil disimpan','CODE'=>201,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Tidak ada data yang ditambah','CODE'=>304,'DATA'=>null);
+                }
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Data tidak dapat disimpan','CODE'=>500,'DATA'=>null);
+            }
+
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
+        $app->put("/transaksi_kredit/{id}", function (Request $request, Response $response, $args){
+            $id = $args["id"];
+            $new_transaksi_detail = $request->getParsedBody();
+            $sql = "UPDATE tbl_transaksi_kredit SET id_cabang=:id_cabang,
+                id_user=:id_user, id_kategori=:id_kategori, keterangan=:keterangan, biaya=:biaya WHERE id_transaksi_kredit=:id";
+            $stmt = $this->db->prepare($sql);
+            
+            $data = [
+                ":id" => $id,
+                ":id_cabang" => $new_transaksi_detail["id_cabang"],
+                ":id_user" => $new_transaksi_detail["id_user"],
+                ":id_kategori" => $new_transaksi_detail["id_kategori"],
+                ":keterangan" => $new_transaksi_detail["keterangan"],
+                ":biaya" => $new_transaksi_detail["biaya"]
+            ];
+            
+            if($stmt->execute($data)){
+                if ($stmt->rowCount() > 0) {
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'Data berhasil disimpan','CODE'=>201,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Data tidak berubah','CODE'=>304,'DATA'=>null);
+                }
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Data tidak dapat diubah','CODE'=>500,'DATA'=>null);
+            }
+
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
+        $app->delete("/transaksi_kredit/{id}", function (Request $request, Response $response, $args){
+            $id = $args["id"];
+            $sql = "DELETE FROM tbl_transaksi_kredit WHERE id_transaksi_kredit=:id";
+            $stmt = $this->db->prepare($sql);
+
+            $data = [":id" => $id];
+
+            if($stmt->execute($data)){
+                if ($stmt->rowCount() > 0) {
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'Data dihapus','CODE'=>200,'DATA'=>$data);
+                }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Tidak ada data yang dihapus','CODE'=>304,'DATA'=>null);
+                }
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Tidak dapat menghapus data','CODE'=>500,'DATA'=>null);
+            }
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
+        //END TRANSAKSI KREDIT
 
         //BAGIAN TRANSAKSI DETAIL
 
