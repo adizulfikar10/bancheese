@@ -647,6 +647,21 @@ return function (App $app) {
             $newResponse = $response->withJson($result);
             return $newResponse;
         });
+        $app->get("/kategori/jenis/{jenis}", function (Request $request, Response $response){
+            $jenis = $args["jenis"];
+            $sql = "SELECT * FROM tbl_kategori where jenis = :jenis ";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([":jenis" => $jenis]);
+            $data = $stmt->fetchAll();
+            if ($stmt->rowCount() > 0) {
+                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+            }
+            
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
 
         $app->get("/kategori/{id}", function (Request $request, Response $response, $args){
             $id = $args["id"];
