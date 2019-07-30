@@ -668,11 +668,12 @@ return function (App $app) {
 
             $new_kategori = $request->getParsedBody();
             
-            $sql = "INSERT INTO tbl_kategori (nama_kategori) VALUES (:nama_kategori)";
+            $sql = "INSERT INTO tbl_kategori (nama_kategori,jenis) VALUES (:nama_kategori,:jenis)";
             $stmt = $this->db->prepare($sql);
             
             $data = [
                 ":nama_kategori" => $new_kategori["nama_kategori"],
+                ":jenis" => $new_kategori["jenis"],
             ];
             
             if($stmt->execute($data)){
@@ -690,12 +691,13 @@ return function (App $app) {
         $app->post("/kategori/{id}", function (Request $request, Response $response, $args){
             $id = $args["id"];
             $new_kategori = $request->getParsedBody();
-            $sql = "UPDATE tbl_kategori SET nama_kategori=:nama_kategori, dtm_upd=:dtm_upd WHERE id_kategori=:id";
+            $sql = "UPDATE tbl_kategori SET nama_kategori=:nama_kategori,jenis =:jenis, dtm_upd=:dtm_upd WHERE id_kategori=:id";
             $stmt = $this->db->prepare($sql);
             
             $data = [
                 ":id" => $id,
                 ":nama_kategori" => $new_kategori["nama_kategori"],
+                ":jenis" => $new_kategori["jenis"],
                 ":dtm_upd" => date("Y-m-d H:i:s")
             ];
             
@@ -1124,6 +1126,99 @@ return function (App $app) {
         });
 
         //END KREDIT
+
+        // BAGIAN TRANSAKSI KREDIT
+        $app->get("/transaksiKredit/{id}", function (Request $request, Response $response, $args){
+            $id = $args["id"];
+            $sql = "SELECT * FROM tbl_transaksi_kredit where id_cabang =:id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([":id"=>$id]);
+            $data = $stmt->fetchAll();
+            if ($stmt->rowCount() > 0) {
+                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+            }
+            
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
+        $app->post("/transaksiKredit", function (Request $request, Response $response){
+
+            $new_tKredit = $request->getParsedBody();
+            
+            $sql = "INSERT INTO tbl_transaksi_kredit (id_cabang,id_user,bayar,keterangan) VALUES (:id_cabang,:id_user,:bayar,:keterangan)";
+            $stmt = $this->db->prepare($sql);
+            
+            $data = [
+                ":id_cabang" => $new_tKredit["id_cabang"],
+                ":id_user" => $new_tKredit["id_user"],
+                ":bayar" => $new_tKredit["bayar"],
+                ":keterangan" => $new_tKredit["keterangan"],
+            ];
+            
+            if($stmt->execute($data)){
+                if ($stmt->rowCount() > 0) {
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                }
+            }
+
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
+        $app->post("/transaksiKredit/{id}", function (Request $request, Response $response, $args){
+            $id = $args["id"];
+            $new_tKredit = $request->getParsedBody();
+            $sql = "UPDATE tbl_transaksi_kredit SET id_cabang=:id_cabang,id_user=:id_user,bayar=:bayar,
+            keterangan=:keterangan, dtm_upd=:dtm_upd WHERE id_transaksi_kredit=:id";
+            $stmt = $this->db->prepare($sql);
+            
+            $data = [
+                ":id" => $id,
+                ":id_cabang" => $new_tKredit["id_cabang"],
+                ":id_user" => $new_tKredit["id_user"],
+                ":bayar" => $new_tKredit["bayar"],
+                ":keterangan" => $new_tKredit["keterangan"],
+                ":dtm_upd" => date("Y-m-d H:i:s")
+            ];
+            
+            if($stmt->execute($data)){
+                if ($stmt->rowCount() > 0) {
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                }
+            }
+
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
+        $app->delete("/transaksiKredit/{id}", function (Request $request, Response $response, $args){
+            $id = $args["id"];
+            $sql = "DELETE FROM tbl_transaksi_kredit WHERE id_transaksi_kredit=:id";
+            $stmt = $this->db->prepare($sql);
+
+            $data = [
+                ":id" => $id
+            ];
+
+            if($stmt->execute($data)){
+                if ($stmt->rowCount() > 0) {
+                    $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
+                }else{
+                    $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'FAILED','CODE'=>500,'DATA'=>null);
+                }
+            }
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+        // END TRANSAKSI KREDIT
+
 
         //BAGIAN TRANSAKSI
 
