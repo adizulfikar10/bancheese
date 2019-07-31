@@ -2109,7 +2109,7 @@ return function (App $app) {
 
          
         $app->get("/getLatestVersion", function (Request $request, Response $response, $args){
-            $sql = "SELECT CONCAT(MAJOR,'.',MINOR,'.',PATCH) AS VERSION FROM `tbl_version` order by major desc, minor desc, patch desc limit 1";
+            $sql = "SELECT LINK,DESKRIPSI, CONCAT(MAJOR,'.',MINOR,'.',PATCH) AS VERSION FROM `tbl_version` order by major desc, minor desc, patch desc limit 1";
             $stmt = $this->db->prepare($sql);
             if($stmt->execute()){
                 if ($stmt->rowCount() > 0) {
