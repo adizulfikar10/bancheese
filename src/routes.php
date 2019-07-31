@@ -909,8 +909,6 @@ return function (App $app) {
 
             $new_debet = $request->getParsedBody();
 
-            
-            
             $sql = "INSERT INTO tbl_debet (id_bahan,id_cabang,id_user,qty,harga) VALUES (:id_bahan,:id_cabang,:id_user,:qty,:harga)";
             $stmt = $this->db->prepare($sql);
             
@@ -923,7 +921,7 @@ return function (App $app) {
             ];
 
             if(isset($new_debet["isMobile"])){
-                $sqlNotif = "INSERT INTO tbl_notif (id_cabang, id_user,`message`,kategori) VALUES (:id_cabang,:id_user,:`message`,:kategori)";
+                $sqlNotif = "INSERT INTO tbl_notif (id_cabang, id_user,`message`,kategori) VALUES (:id_cabang,:id_user,:`message`,0)";
                 $stmtNotif = $this->db->prepare($sqlNotif);
                 
                 $dataNotif = [
@@ -2313,7 +2311,7 @@ return function (App $app) {
 
         // NOTIF
         $app->get("/notif", function (Request $request, Response $response, $args){
-            $sql = "SELECT * FROM V_NOTIF WHERE MARK = 0";
+            $sql = "SELECT * FROM v_notif WHERE MARK = 0";
             $stmt = $this->db->prepare($sql);
             if($stmt->execute()){
                 if ($stmt->rowCount() > 0) {
