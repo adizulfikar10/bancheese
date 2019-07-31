@@ -908,6 +908,8 @@ return function (App $app) {
         $app->post("/debet", function (Request $request, Response $response){
 
             $new_debet = $request->getParsedBody();
+
+            
             
             $sql = "INSERT INTO tbl_debet (id_bahan,id_cabang,id_user,qty,harga) VALUES (:id_bahan,:id_cabang,:id_user,:qty,:harga)";
             $stmt = $this->db->prepare($sql);
@@ -919,6 +921,19 @@ return function (App $app) {
                 ":qty" => $new_debet["qty"],
                 ":harga" => $new_debet["harga"],
             ];
+
+            if(isset($new_debet["isMobile"])){
+                $sqlNotif = "INSERT INTO tbl_notif (id_cabang, id_user,`message`,kategori) VALUES (:id_cabang,:id_user,:`message`,:kategori)";
+                $stmtNotif = $this->db->prepare($sqlNotif);
+                
+                $dataNotif = [
+                    ":id_cabang" => $new_debet["id_cabang"],
+                    ":id_user" => $new_debet["id_user"],
+                    ":message" => $new_debet["message"],
+                    ":kategori" => 0,
+                ];
+                    
+            }
             
             if($stmt->execute($data)){
                 if ($stmt->rowCount() > 0) {
