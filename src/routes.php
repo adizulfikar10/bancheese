@@ -1003,16 +1003,20 @@ return function (App $app) {
             $id_bahan = $args["id_bahan"];
             $id_cabang = $args["id_cabang"];
             $sql = "SELECT 
-                    DATE_FORMAT(TGL_KREDIT,'%d %M %y') AS TANGGAL,
-                    ID_DEBET,
-                    ID_KREDIT,
-                    ID_BAHAN,
-                    ID_CABANG,
-                    HARGA,
-                    QTY
-                    FROM tbl_kredit WHERE harga=:harga 
-                    AND id_bahan=:id_bahan 
-                    AND id_cabang=:id_cabang ORDER BY TGL_KREDIT DESC";
+                    DATE_FORMAT(a.TGL_KREDIT,'%d %M %y') AS TANGGAL,
+                    a.ID_DEBET,
+                    a.ID_KREDIT,
+                    a.ID_BAHAN,
+                    a.ID_CABANG,
+                    a.HARGA,
+                    a.QTY,
+                    b.NAMA_BAHAN
+                    FROM tbl_kredit a
+                    INNER JOIN tbl_bahan_baku b
+                    ON a.ID_BAHAN = b.ID_BAHAN
+                    WHERE a.harga=:harga 
+                    AND a.id_bahan=:id_bahan 
+                    AND a.id_cabang=:id_cabang ORDER BY TGL_KREDIT DESC";
             $stmt = $this->db->prepare($sql);
 
             $data = [
@@ -1864,11 +1868,16 @@ return function (App $app) {
                     DATE_FORMAT(TGL_TRANSAKSI,'%Y%m%d') AS PERIODE
                     ,DATE_FORMAT(TGL_TRANSAKSI,'%e %b %Y') AS TGL_TRANSAKSI
                     ,sum(NET_HARGA) AS NET_HARGA,sum(QTY) AS QTY
-                    ,COALESCE((select sum(harga) from tbl_kredit where ID_CABANG = 
+                    ,COALESCE((select sum(harga*qty) from tbl_debet where ID_CABANG = 
                         v_transaksi.ID_CABANG AND 
-                        DATE_FORMAT(TGL_KREDIT,'%e %b %Y') =  
+                        DATE_FORMAT(TGL_DEBET,'%e %b %Y') =  
                         DATE_FORMAT(v_transaksi.TGL_TRANSAKSI,'%e %b %Y')),0) 
-                    AS KREDIT
+                    AS DEBET
+                    ,COALESCE((select sum(biaya) from tbl_transaksi_kredit where ID_CABANG = 
+                        v_transaksi.ID_CABANG AND 
+                        DATE_FORMAT(TGL_TRANSAKSI,'%e %b %Y') =  
+                        DATE_FORMAT(v_transaksi.TGL_TRANSAKSI,'%e %b %Y')),0) 
+                    AS PENGELUARAN 
                     FROM v_transaksi
                     WHERE id_cabang $where
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
@@ -1880,11 +1889,11 @@ return function (App $app) {
                     ,DATE_FORMAT(TGL_TRANSAKSI,'%Y%m') AS PERIODE
                     ,DATE_FORMAT(TGL_TRANSAKSI,'%b %Y') AS TGL_TRANSAKSI
                     ,sum(NET_HARGA) AS NET_HARGA,sum(QTY) AS QTY
-                    ,COALESCE((select sum(harga) from tbl_kredit where ID_CABANG = 
+                    ,COALESCE((select sum(harga*qty) from tbl_debet where ID_CABANG = 
                         v_transaksi.ID_CABANG AND 
-                        DATE_FORMAT(TGL_KREDIT,'%b %Y') =  
+                        DATE_FORMAT(TGL_DEBET,'%b %Y') =  
                         DATE_FORMAT(v_transaksi.TGL_TRANSAKSI,'%b %Y')),0) 
-                    AS KREDIT 
+                    AS DEBET 
                     FROM v_transaksi
                     WHERE id_cabang $where 
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
@@ -1895,11 +1904,11 @@ return function (App $app) {
                     ,DATE_FORMAT(TGL_TRANSAKSI,'%Y') AS PERIODE
                     ,DATE_FORMAT(TGL_TRANSAKSI,'%Y') AS TGL_TRANSAKSI
                     ,sum(NET_HARGA) AS NET_HARGA,sum(QTY) AS QTY
-                    ,COALESCE((select sum(harga) from tbl_kredit where ID_CABANG = 
+                    ,COALESCE((select sum(harga*qty) from tbl_debet where ID_CABANG = 
                         v_transaksi.ID_CABANG AND 
-                        DATE_FORMAT(TGL_KREDIT,'%Y') =  
+                        DATE_FORMAT(TGL_DEBET,'%Y') =  
                         DATE_FORMAT(v_transaksi.TGL_TRANSAKSI,'%Y')),0) 
-                    AS KREDIT
+                    AS DEBET
                     FROM v_transaksi
                     WHERE id_cabang $where
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
