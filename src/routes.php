@@ -1894,6 +1894,10 @@ return function (App $app) {
                         DATE_FORMAT(TGL_DEBET,'%b %Y') =  
                         DATE_FORMAT(v_transaksi.TGL_TRANSAKSI,'%b %Y')),0) 
                     AS DEBET 
+                    ,COALESCE((select sum(biaya) from tbl_transaksi_kredit where ID_CABANG = 
+                        v_transaksi.ID_CABANG AND 
+                        DATE_FORMAT(TGL_TRANSAKSI,'%b %Y') =  
+                        DATE_FORMAT(v_transaksi.TGL_TRANSAKSI,'%b %Y')),0) 
                     FROM v_transaksi
                     WHERE id_cabang $where 
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
@@ -1909,6 +1913,10 @@ return function (App $app) {
                         DATE_FORMAT(TGL_DEBET,'%Y') =  
                         DATE_FORMAT(v_transaksi.TGL_TRANSAKSI,'%Y')),0) 
                     AS DEBET
+                    ,COALESCE((select sum(biaya) from tbl_transaksi_kredit where ID_CABANG = 
+                        v_transaksi.ID_CABANG AND 
+                        DATE_FORMAT(TGL_TRANSAKSI,'%Y') =  
+                        DATE_FORMAT(v_transaksi.TGL_TRANSAKSI,'%Y')),0) 
                     FROM v_transaksi
                     WHERE id_cabang $where
                     AND tgl_transaksi LIKE '$tgl_tansaksi%' 
