@@ -2312,7 +2312,7 @@ return function (App $app) {
 
         // NOTIF
         $app->get("/notif", function (Request $request, Response $response, $args){
-            $sql = "SELECT * FROM V_NOTIF WHERE MARK = 0";
+            $sql = "SELECT * FROM v_notif WHERE MARK = 0";
             $stmt = $this->db->prepare($sql);
             if($stmt->execute()){
                 if ($stmt->rowCount() > 0) {
