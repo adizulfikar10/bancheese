@@ -921,14 +921,13 @@ return function (App $app) {
             ];
 
             if(isset($new_debet["isMobile"])){
-                $sqlNotif = "INSERT INTO tbl_notif (id_cabang, id_user,`message`,kategori) VALUES (:id_cabang,:id_user,:`message`,0)";
+                $sqlNotif = "INSERT INTO tbl_notif (id_cabang, id_user,message,kategori) VALUES (:id_cabang2,:id_user2,:message,0)";
                 $stmtNotif = $this->db->prepare($sqlNotif);
                 
                 $dataNotif = [
-                    ":id_cabang" => $new_debet["id_cabang"],
-                    ":id_user" => $new_debet["id_user"],
-                    ":message" => $new_debet["message"],
-                    ":kategori" => 0,
+                    ":id_cabang2" => $new_debet["id_cabang"],
+                    ":id_user2" => $new_debet["id_user"],
+                    ":message" => $new_debet["message"]
                 ];
                 $stmtNotif->execute($dataNotif);
                     
