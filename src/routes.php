@@ -1875,7 +1875,7 @@ return function (App $app) {
                     AS DEBET
                     ,COALESCE((select sum(biaya) from tbl_transaksi_kredit where ID_CABANG = 
                         v_transaksi.ID_CABANG AND 
-                        DATE_FORMAT(TGL_TRANSAKSI,'%e %b %Y') =  
+                        DATE_FORMAT(DTM_CRT,'%e %b %Y') =  
                         DATE_FORMAT(v_transaksi.TGL_TRANSAKSI,'%e %b %Y')),0) 
                     AS PENGELUARAN 
                     FROM v_transaksi
@@ -1896,7 +1896,7 @@ return function (App $app) {
                     AS DEBET 
                     ,COALESCE((select sum(biaya) from tbl_transaksi_kredit where ID_CABANG = 
                         v_transaksi.ID_CABANG AND 
-                        DATE_FORMAT(TGL_TRANSAKSI,'%b %Y') =  
+                        DATE_FORMAT(DTM_CRT,'%b %Y') =  
                         DATE_FORMAT(v_transaksi.TGL_TRANSAKSI,'%b %Y')),0)
                     AS PENGELUARAN  
                     FROM v_transaksi
@@ -1916,7 +1916,7 @@ return function (App $app) {
                     AS DEBET
                     ,COALESCE((select sum(biaya) from tbl_transaksi_kredit where ID_CABANG = 
                         v_transaksi.ID_CABANG AND 
-                        DATE_FORMAT(TGL_TRANSAKSI,'%Y') =  
+                        DATE_FORMAT(DTM_CRT,'%Y') =  
                         DATE_FORMAT(v_transaksi.TGL_TRANSAKSI,'%Y')),0) 
                     AS PENGELUARAN 
                     FROM v_transaksi
