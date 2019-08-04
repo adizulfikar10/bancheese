@@ -1745,8 +1745,6 @@ return function (App $app) {
             ];
             $stmt->execute($dataDelete);
 
-          
-
 
             $sql = "INSERT INTO tbl_transaksi(id_transaksi,id_user,id_cabang,status,bayar) VALUES (:id_transaksi,:id_user,:id_cabang,:status,:bayar);";
             $stmt = $this->db->prepare($sql);
@@ -1787,6 +1785,64 @@ return function (App $app) {
                 $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Ada data yang tidak dapat diunggah','CODE'=>400,'DATA'=>NULL);
             }
                 
+            $newResponse = $response->withJson($result);
+            return $newResponse;
+        });
+
+        $app->post("/syncTransaksi", function (Request $request, Response $response, $args){
+            $transaksi = $request->getParsedBody();
+            $isSuccess = true;
+
+            foreach($transaksi as $transaksi){
+                $sql = "DELETE FROM tbl_transaksi WHERE id_transaksi=:id";
+                $stmt = $this->db->prepare($sql);
+                $dataDeleteDetail = [
+                    ":id" => $transaksi['TRANSACTION']['idTransaksi']
+                ];
+                $stmt->execute($dataDeleteDetail);
+
+                $sql = "INSERT INTO tbl_transaksi(id_transaksi,id_user,id_cabang,status,bayar,tgl_transaksi,dtm_crt) 
+                    VALUES (:id_transaksi,:id_user,:id_cabang,:status,:bayar,:tgl_transaksi,:dtm_crt);";
+                $stmt = $this->db->prepare($sql);
+                $dataTransaksi = [
+                    ":id_transaksi" => $transaksi['TRANSACTION']['idTransaksi'],
+                    ":id_user" => $transaksi['TRANSACTION']["idUser"],
+                    ":id_cabang" => $transaksi['TRANSACTION']["idCabang"],
+                    ":status" => $transaksi['TRANSACTION']["status"],
+                    ":bayar" => $transaksi['TRANSACTION']["bayar"],
+                    ":tgl_transaksi" => date('Y/m/d H:i:s', strtotime($transaksi['TRANSACTION']['tglTransaksi'])),
+                    ":dtm_crt" => date('Y/m/d H:i:s', strtotime($transaksi['TRANSACTION']['dtmCrt']))
+                ];
+                if($stmt->execute($dataTransaksi)){
+                    foreach($transaksi['DETAIL_TRANSACTION'] as $detailTransaksi){
+    
+                        $sql = "INSERT INTO tbl_transaksi_detail(id_transaksi,id_menu_detail,harga,qty,nama_menu,diskon) 
+                        VALUES (:id_transaksi,:id_menu_detail,:harga,:qty,:nama_menu,:diskon);";
+                        $stmt = $this->db->prepare($sql);
+                        
+                        $data = [
+                            ":id_transaksi" =>$detailTransaksi['idTransaksi'],
+                            ":id_menu_detail" => $detailTransaksi['idMenuDetail'],
+                            ":harga" =>$detailTransaksi['harga'],
+                            ":qty" =>$detailTransaksi['qty'],
+                            ":nama_menu" => $detailTransaksi['namaMenu'],
+                            ":diskon" => $detailTransaksi['diskon'],
+                        ];
+                        if($stmt->execute($data)){
+                            
+                        }else{
+                            $isSuccess = false;
+                        }
+                    }
+                }
+
+            }
+
+            if($isSuccess){
+                $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>NULL);
+            }else{
+                $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Ada data yang tidak dapat diunggah','CODE'=>500,'DATA'=>NULL);
+            }
             $newResponse = $response->withJson($result);
             return $newResponse;
         });
