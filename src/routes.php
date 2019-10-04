@@ -61,9 +61,7 @@ return function (App $app) {
             $id_device = $user['id_device'];
 
 
-
-            $sql = "SELECT a.username,a.role,a.nama_user,a.id_cabang,a.id_user,b.nama_cabang,b.alamat FROM tbl_user a 
-            join tbl_cabang b on a.id_cabang = b.id_cabang WHERE 
+            $sql = "SELECT a.username,a.role,a.nama_user,a.id_user FROM tbl_user a WHERE 
             a.username =convert(:username using utf8mb4) collate utf8mb4_bin AND a.password=:password";
             $stmt = $this->db->prepare($sql);
 
@@ -80,7 +78,7 @@ return function (App $app) {
                         $newResponse = $response->withJson($result);
                         return $newResponse;
                     }else{
-                        $checkDevice = "SELECT device_name FROM `tbl_device` WHERE id_device = :id_device";
+                        $checkDevice = "SELECT b.id_cabang, b.nama_cabang,a.device_name,b.alamat FROM `tbl_device` a join tbl_cabang b on a.id_cabang = b.id_cabang WHERE id_device = :id_device";
                         $stmtCheck = $this->db->prepare($checkDevice);
                         
                         $dataCheck = [
@@ -92,6 +90,10 @@ return function (App $app) {
                             $newResponse = $response->withJson($result);
                             return $newResponse;
                         }
+                        $dataCabang = $stmtCheck->fetch();
+                        $data['id_cabang'] = $dataCabang['id_cabang'];
+                        $data['nama_cabang'] = $dataCabang['nama_cabang'];
+                        $data['alamat'] = $dataCabang['alamat'];
 
                         //CHECK USER
 
