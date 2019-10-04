@@ -104,9 +104,9 @@ return function (App $app) {
                         ];
                         $stmtCheckUser->execute($dataCheckUser);
                         if ($stmtCheckUser->rowCount() == 0) {
-                            $result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Anda tidak diijinkan masuk dengan perangkat ini','CODE'=>500,'DATA'=>null);
-                            $newResponse = $response->withJson($result);
-                            return $newResponse;
+                            //$result = array('STATUS' => 'FAILED', 'MESSAGE' => 'Anda tidak diijinkan masuk dengan perangkat ini','CODE'=>500,'DATA'=>null);
+                            //$newResponse = $response->withJson($result);
+                            //return $newResponse;
                         }
                         $result = array('STATUS' => 'SUCCESS', 'MESSAGE' => 'SUCCESS','CODE'=>200,'DATA'=>$data);
                     }
